@@ -1,0 +1,54 @@
+//===========================================
+//
+// Description: Script to control a light. 
+// Assumes that messages will be communicated
+// from a 'Light switch' object on channel 1000
+//
+// Author: Kathryn Merrick
+//
+//===========================================
+
+integer COMM_CHANNEL = 1000;
+
+default
+{
+    state_entry()
+    {
+        // Turn the light off to begin with.
+        state off;
+    }
+}
+
+state off
+{
+    state_entry()
+    {
+        // Turn the light off.
+        llSetPrimitiveParams([PRIM_FULLBRIGHT, ALL_SIDES, FALSE]);
+        llSetColor(<1.0, 1.0, 0.0>, ALL_SIDES);
+        llSetPrimitiveParams([PRIM_POINT_LIGHT, FALSE,   <0.0,1.0,0.0>,1.0, 10.0, 0.5]); 
+        llListen(COMM_CHANNEL, "Light switch", NULL_KEY, "toggle");
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    { 
+        state on;
+    }
+}
+
+state on
+{
+    state_entry()
+    {
+        // Turn the light on.
+        llSetPrimitiveParams([PRIM_FULLBRIGHT, ALL_SIDES, TRUE]);
+        llSetColor(<1.0, 1.0, 0.4>, ALL_SIDES);
+        llSetPrimitiveParams([PRIM_POINT_LIGHT,TRUE, <1.0,0.7,1.0>, 1.0, 10.0, 0.6 ]); 
+        llListen(COMM_CHANNEL, "Light switch", NULL_KEY, "toggle");
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        state off;
+    }
+}

@@ -1,0 +1,26 @@
+//================================================
+//
+// Description: A chair that moves towards the 
+// closest avatar detected within a 5m radius.
+//
+// Author: Kathryn Merrick
+//
+//===============================================
+
+
+default
+{
+    state_entry()
+    {
+       llSensorRepeat("", NULL_KEY, AGENT, 5, PI, 1);
+    }
+
+    sensor(integer num_detected)
+    {
+        vector current_pos = llGetPos();
+        vector pos_closest_avatar = llDetectedPos(0);
+        vector pos_to_move_to = <pos_closest_avatar.x, pos_closest_avatar.y - 1.0, current_pos.z>;
+        llSetPos(pos_to_move_to);
+    }
+}
+

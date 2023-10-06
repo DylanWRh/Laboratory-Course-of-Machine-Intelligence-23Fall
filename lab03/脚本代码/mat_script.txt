@@ -1,0 +1,27 @@
+//=======================================================
+//
+// Description: Script that says hello to all avatars
+// detected within a one metre radius.
+//
+// Author: Kathryn Merrick
+//
+//=======================================================
+
+integer OPEN_CHANNEL = 0;
+
+default
+{
+    state_entry()
+    {
+        llSensorRepeat("", NULL_KEY, AGENT, 2, PI, 1);
+    }
+
+    sensor(integer num_detected)
+    {
+        integer i;
+        for(i=0; i<num_detected; i++)
+        {
+            llWhisper(OPEN_CHANNEL, "Hello " + llDetectedName(i)); 
+        }
+    }
+}

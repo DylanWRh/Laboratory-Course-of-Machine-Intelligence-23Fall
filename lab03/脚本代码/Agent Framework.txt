@@ -1,0 +1,46 @@
+//========================================
+//
+// Description: A simple agent framework
+//
+// Author: Kathryn Merrick
+//
+//========================================
+
+default
+{
+    state_entry()
+    {
+        state sensation;
+    }
+}
+
+state sensation
+{
+    state_entry()
+    {
+        // Gather information about the world
+        // Store information in global variables
+        llOwnerSay("DEGUG: Starting sensation process.");
+        state reasoning;
+    }
+}
+
+state reasoning
+{
+    state_entry()
+    {
+        // Process information stored in global variables
+        llOwnerSay("DEGUG: Starting reasoning process.");
+        state activation;
+    }
+}
+
+state activation
+{
+    state_entry()
+    {
+        // Perform an action in the world
+        llOwnerSay("DEGUG: Starting activation process.");
+        state sensation;
+    }
+}

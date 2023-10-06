@@ -1,0 +1,24 @@
+default
+{
+    state_entry()
+    {
+        llWhisper(PUBLIC_CHANNEL, 
+            "this messages will be heard within 10 meters");
+
+        llSay(PUBLIC_CHANNEL, 
+            "this message will be heard within 20 meters");
+
+        llShout(PUBLIC_CHANNEL, 
+            "this message will be heard within 100 meters");
+        
+        llSay(23, 
+            "This message will be heard by scipts " +
+            "listening on channel 23");
+        
+        llSay(DEBUG_CHANNEL, "This is a debug message");
+
+        llRegionSay(23, 
+            "This message will be heard anywhere in this " +
+            "region on channel 23");
+    }
+}

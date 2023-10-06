@@ -1,0 +1,19 @@
+//============================================
+//
+// Description: Script to control lights.
+// When touched, sends a message to light,
+// telling them to toggle.
+//
+// Author: Kathryn Merrick
+//
+//============================================
+
+integer COMM_CHANNEL = 1000;
+
+default
+{
+    touch_start(integer total_number)
+    {
+        llSay(COMM_CHANNEL, "toggle");
+    }
+}

@@ -1,0 +1,45 @@
+//==========================================
+// 
+// Description: An emotional talking-table.
+//
+// Author: Kathryn Merrick
+//
+//==========================================
+
+integer OPEN_CHANNEL = 0;
+
+default
+{
+    state_entry()
+    {
+        state happy;
+    }
+}
+
+state happy
+{
+    state_entry()
+    {
+        llWhisper(OPEN_CHANNEL, "I'm feeling happy.");
+    }
+
+    collision(integer num_detected)
+    {
+        llWhisper(OPEN_CHANNEL, "Ouch!");
+        state grumpy;
+    }
+}
+
+state grumpy
+{
+    state_entry()
+    {
+        llWhisper(OPEN_CHANNEL, "I'm feeling grumpy.");
+    }
+
+    touch_start(integer total_number)
+    {
+        llWhisper(OPEN_CHANNEL, "Oh, hello!");
+        state happy;
+    }
+}

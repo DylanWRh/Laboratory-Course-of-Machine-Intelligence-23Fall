@@ -1,0 +1,33 @@
+// color options that will be presented to user
+integer colorNameOffset = 0;
+integer colorValueOffset = 1;
+integer numColorAspects = 2;
+list colors = [
+    // name,    value
+    "blue",     <0, 0, 1>, 
+    "green",    <0, 1, 0>,
+    "red",      <1, 0, 0>,
+    "yellow",   <1, 1, 0>,
+    "cyan",     <0, 1, 1>,
+    "purple",   <1, 0, 1>,
+    "black",    <0, 0, 0>,
+    "white",    <1, 1, 1>
+    ];
+
+string getColorName(integer idx)
+{
+    return llList2String(colors, idx * numColorAspects + colorNameOffset);
+}
+
+vector getColorValue(integer idx)
+{   
+    return llList2Vector(colors, idx * numColorAspects + colorValueOffset);
+}
+
+vector getColorValueByName(string name)
+{
+    integer nameIdx = llListFindList(colors, [name]);
+    if (nameIdx == -1) return ZERO_VECTOR; // name not found in list
+    return llList2Vector(colors, 
+        nameIdx + colorValueOffset - colorNameOffset); 
+}
