@@ -1,0 +1,70 @@
+// Find object's owner, position this object in front of owner and
+// point in the direction owner is looking
+
+float senseRange = 20.0; // search within 20m
+float senseArc = PI;     // search all around object
+float senseRate = 5.0;   // search every 5 seconds
+
+vector offsetFromOwner = <1.0, 0.0, 1.0>;
+
+// turn object in to a small phantom cone
+setupPrim()
+{
+    llSetPrimitiveParams([
+        PRIM_TYPE, 
+            PRIM_TYPE_CYLINDER,     // type 
+                0,                  // hole shape
+                <0.0, 1.0, 0.0>,    // cut
+                0,                  // hollow
+                ZERO_VECTOR,        // twist
+                ZERO_VECTOR,        // taper
+                ZERO_VECTOR,        // top shear
+        PRIM_SIZE,
+            <0.25, 0.25, 0.5>,
+        PRIM_PHANTOM,
+            TRUE
+    ]);       
+}
+
+
+default
+{
+    state_entry()
+    {
+        setupPrim();
+        
+        // search for owner by id
+        llSensorRepeat("", llGetOwner(), AGENT, senseRange, senseArc, 
+          senseRate);
+    }
+    on_rez(integer p)
+    {
+        llResetScript();
+    }
+    
+    no_sensor()
+    {
+        // can't find owner, go away
+        llDie();
+    }
+    
+    sensor(integer num_detected)
+    {
+        // Since script is searching for owner by id, and since the
+        // owner key is unique and the script sensed something, we
+        // don't need to check num_detected; it will always be 1, and
+        // the index of the owner sensed will always be 0
+        
+        // Point cone in direction owner is looking.
+        // The extra rotation is becaue at zero rotation, cones point
+        // along their z-axis, and we want this one to point along
+        // the x-axis. 
+        llSetRot(llEuler2Rot(<0.0, PI_BY_TWO, 0.0>) * 
+            llDetectedRot(0));
+        
+        // Place cone at offsetFromOwner, rotated so it is always in
+        // the same position relative to the owner
+        llSetPos(llDetectedPos(0) + offsetFromOwner * 
+            llDetectedRot(0));
+    }
+}

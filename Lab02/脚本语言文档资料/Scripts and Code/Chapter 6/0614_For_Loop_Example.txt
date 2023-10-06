@@ -1,0 +1,15 @@
+default
+{
+    state_entry()
+    {
+        list items = ["orange", "apple", "banana"];
+        string fruit;
+        integer x;
+        for (x = 0; x < llGetListLength(items); x = x + 1)
+        {
+            fruit = llList2String(items, x);
+            llOwnerSay(fruit);
+        }
+        llOwnerSay("all done");
+    }
+}

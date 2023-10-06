@@ -1,0 +1,31 @@
+----------------------------------------------------------------------
+The Scrubber:
+----------------------------------------------------------------------
+
+// The Scrubber v1.3 - Jopsy Pendragon, 8/22/2007
+// Just drop this script on a prim that's giving you grief.
+// It will reset/unset most persistant prim settings that 
+// can only be set by scripts and then remove itself.
+// This script is in the public domain and may be used freely.
+// Please leave this comment block intact if you share this script!
+
+default
+{
+    state_entry()
+    {
+        llSetSitText( "" );
+        llSetTouchText( "" );
+        llParticleSystem( [ ] );
+        llSetText( "", ZERO_VECTOR, 1.0 );
+        llTargetOmega( ZERO_VECTOR, 0, 0 );
+        llSetCameraAtOffset( ZERO_VECTOR );
+        llSetCameraEyeOffset( ZERO_VECTOR );
+        llSitTarget( ZERO_VECTOR, ZERO_ROTATION );
+        llSetTextureAnim( FALSE , ALL_SIDES, 1, 1, 0, 0, 0.0 );
+        llStopSound();
+        llOwnerSay("This Prim is Clean... ");
+        llRemoveInventory( llGetScriptName() ); // vanish without a trace...
+    }
+} 
+
+

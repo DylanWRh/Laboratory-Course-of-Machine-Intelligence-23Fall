@@ -1,0 +1,18 @@
+sayOuch()
+{
+    llSay(0, "Ouch!");
+}
+
+default
+{
+    state_entry()
+    {
+        sayOuch();   
+    }
+
+    touch_start(integer total_number)
+    {
+        sayOuch();
+        sayOuch();
+    }
+}

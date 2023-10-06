@@ -1,0 +1,16 @@
+default
+{
+    state_entry()
+    {
+        llSetStatus(STATUS_PHYSICS, TRUE);
+    }
+    
+    collision_start(integer num_detected)
+    {
+        // Move away from the thing colliding with this object
+        vector shove = llGetPos() - llDetectedPos(0);
+        shove = llVecNorm(shove);
+        shove = shove * 30.0;
+        llApplyImpulse(shove, FALSE);
+    }
+}

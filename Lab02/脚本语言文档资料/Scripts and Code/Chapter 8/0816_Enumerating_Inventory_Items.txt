@@ -1,0 +1,16 @@
+default
+{
+    touch_start(integer total_number)
+    {
+        integer nItems = llGetInventoryNumber(INVENTORY_ALL);
+        integer x;
+        for (x = 0; x < nItems; x++)
+        {
+            string name = llGetInventoryName(INVENTORY_ALL, x);
+            llOwnerSay("Name: " + name);
+            llOwnerSay("Creator: " +        
+                (string)llGetInventoryCreator(name));
+            llOwnerSay("---");
+        }
+    }
+}

@@ -1,0 +1,18 @@
+// do winning effect
+launchFireworks()
+{
+    integer x;
+    // Name of the object in inventory to rez
+    string objectName = "Fireworks";
+    // Offset from this object to rez the new object at
+    vector vOffset = <0.0, 0.0, 2.0>;
+    for (x = 0; x < 10; x++)
+    {
+        llRezObject(
+            objectName,
+            llGetPos() + vOffset,
+            ZERO_VECTOR,
+            ZERO_ROTATION,
+            1);
+    }
+}

@@ -1,0 +1,15 @@
+default
+{
+    state_entry()
+    {
+        // Create 2 wedges of particles using the angle pattern; use 
+        // more than the default number of particles with   
+        // PSYS_SRC_BURST_PART_COUNT to make the wedges more obvious
+        llParticleSystem([
+            PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_ANGLE,
+            PSYS_SRC_ANGLE_BEGIN, PI / 8.0,
+            PSYS_SRC_ANGLE_END, PI / 4.0,
+            PSYS_SRC_BURST_PART_COUNT, 500
+            ]);
+    }
+}

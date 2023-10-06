@@ -1,0 +1,37 @@
+// Dedicated email sender
+// This script accepts link messages to set a to email address, message
+// subject and message body, and a command to send an email with those 
+// parameters. 
+
+// These command codes must be the same in both scripts
+integer SET_TO = 1;
+integer SET_SUBJECT= 2;
+integer SET_BODY = 3;
+integer SEND = 4;
+
+string to = "";
+string subject = "";
+string body = "";
+
+default
+{
+    link_message(integer sender_num, integer num, string str, key id)
+    {
+        if (num == SET_TO)
+        {
+            to = str;
+        }
+        else if (num == SET_SUBJECT)
+        {
+            subject = str;
+        }
+        else if (num == SET_BODY)
+        {
+            body = str;
+        }
+        else if (num == SEND)
+        {
+            llEmail(to, subject, body);
+        }
+    }
+}

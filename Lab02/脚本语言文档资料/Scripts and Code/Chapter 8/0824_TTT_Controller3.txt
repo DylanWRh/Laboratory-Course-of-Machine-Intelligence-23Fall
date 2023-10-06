@@ -1,0 +1,187 @@
+// linked message commands
+integer CMD_SHOW_X = 1;
+integer CMD_SHOW_O = 2;
+integer CMD_SHOW_BLANK = 3;
+integer CMD_GET_TILE = 4;
+
+// This list maps tile numbers to link numbers.  It will be filled 
+// in as the child prims respond to CMD_GET_TILE
+list tileToLink = [
+0, 0, 0,
+0, 0, 0,
+0, 0, 0];
+
+// The scripts representation of the board
+integer BLANK = 0;
+integer X = 1;
+integer O = 2;
+list board = [
+BLANK, BLANK, BLANK,
+BLANK, BLANK, BLANK, 
+BLANK, BLANK, BLANK
+];
+
+// Whose turn is it?
+integer whoseTurn = X; 
+
+// Set the tile number to link mapping for this link
+setLinkTile(integer link, integer tile)
+{
+    if (tile == 0)
+    {
+        tileToLink = [link] + llList2List(tileToLink, 1, 8);
+    }
+    else if (tile == 8)
+    {
+        tileToLink = llList2List(tileToLink, 0, 7) + [link];
+    }
+    else
+    {
+        tileToLink = 
+            llList2List(tileToLink, 0, tile - 1) + 
+            [link] + 
+            llList2List(tileToLink, tile + 1, 8);
+    }
+}
+
+// Get the tile number of a link
+integer getLinkToTile(integer link)
+{
+    return llListFindList(tileToLink, [link]);
+}
+
+// Get the link number of a tile
+integer getTileToLink(integer tile)
+{
+    return llList2Integer(tileToLink, tile);
+}
+
+
+// What is the value of a tile, X, O or BLANK
+integer getBoardAt(integer tile)
+{
+    return llList2Integer(board, tile);
+}
+
+// TRUE if tile is blank
+integer tileIsBlank(integer tile)
+{
+    return getBoardAt(tile) == BLANK;
+}
+
+// Set the value of a tile in our representation of the board
+setBoard(integer tile, integer player)
+{
+    if (tile == 0)
+    {
+        board = [player] + llList2List(board, 1, 8);
+    }
+    else if (tile == 8)
+    {
+        board = llList2List(board, 0, 7) + [player];
+    }
+    else
+    {
+        board = 
+            llList2List(board, 0, tile - 1) + 
+            [player] + 
+            llList2List(board, tile + 1, 8);
+    }
+}
+
+// set a game tile to X by its link number
+setLinkToX(integer linkNum)
+{
+    llMessageLinked(linkNum, CMD_SHOW_X, "", NULL_KEY);
+}
+
+// set a game tile to O by its link number
+setLinkToO(integer linkNum)
+{
+    llMessageLinked(linkNum, CMD_SHOW_O, "", NULL_KEY);
+}
+
+// Change a tile, send a link message to the tile and update the board
+setTileTo(integer tile, integer player)
+{
+    setBoard(tile, player);
+    if (player == X)
+    {
+        setLinkToX(getTileToLink(tile));
+    }
+    else
+    {
+        setLinkToO(getTileToLink(tile));
+    }
+}
+
+// completely reset the game
+resetGame()
+{
+    llMessageLinked(LINK_ALL_OTHERS, CMD_SHOW_BLANK, "", NULL_KEY);
+    whoseTurn = X;
+    board = [
+    BLANK, BLANK, BLANK,
+    BLANK, BLANK, BLANK,
+    BLANK, BLANK, BLANK
+    ];
+}
+
+announceTurn()
+{
+    if (whoseTurn == X)
+    {
+        llSay(0, "It's X's turn");
+    }
+    else
+    {
+        llSay(0, "It's O's turn");
+    }
+}
+
+default
+{
+    state_entry()
+    {
+        // poll the tiles for their link numbers
+        llMessageLinked(LINK_ALL_OTHERS, CMD_GET_TILE, "", NULL_KEY);        
+        resetGame();
+        announceTurn();
+    }
+    
+    link_message(integer sender, integer num, string s, key k)
+    {
+        // the only link message this script receives is link 
+        // number to tile mappings
+        setLinkTile(sender, num);
+    }
+        
+    touch_start(integer total_number)
+    {
+        if (llDetectedLinkNumber(0) == llGetLinkNumber())
+        {
+            // user touched the controller prim, reset the game
+            resetGame();
+        }
+        else
+        {
+            integer tile = getLinkToTile(llDetectedLinkNumber(0));
+            if (tile != -1)
+            {
+                if (tileIsBlank(tile))
+                {
+                    setTileTo(tile, whoseTurn);
+                    if (whoseTurn == X) 
+                    {
+                        whoseTurn = O;
+                    }
+                    else
+                    {   
+                        whoseTurn = X;
+                    }
+                    announceTurn();
+                }
+            }
+        }
+    }
+}

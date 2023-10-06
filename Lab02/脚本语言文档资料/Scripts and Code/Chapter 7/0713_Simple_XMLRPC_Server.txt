@@ -1,0 +1,70 @@
+// XML-RPC color setter and getter
+//
+// Allow XMl-RPC clients to get and set the color of this object
+// remotely.
+// This script accepts XML-RPC requests and interperts the integer part
+// of the request as a command and the string part as an argument. Two 
+// commands are accepted: get the color of the object, and set the
+// color of the object. There is no argument for the get color request.
+// For the set color request, the string part is interperted as a
+// vector, and is used as a color.
+//
+// The script sends an RPC reply, with the integer part set to the
+// number of the command received. For the set color reply, the string
+// part is empty; for the get color request, the string part is the
+// color of the object, as a vector.
+//
+// User must get the RPC channel key to the XML-RPC client manually.
+
+
+// Constants for the commands
+integer RPC_GET_COLOR = 1;
+integer RPC_SET_COLOR = 2;
+
+// Script has received a request, do the requested action and send 
+// the reply
+dispatchRPCRequest(key channelid, key messageid, integer idata, 
+    string sdata)
+{
+    if (idata == RPC_SET_COLOR)
+    {
+        llSetColor((vector)sdata, ALL_SIDES);
+        llRemoteDataReply(channelid, messageid, "", RPC_SET_COLOR);    
+    }
+    else if (idata == RPC_GET_COLOR)
+    {
+        llRemoteDataReply(channelid, messageid, (string)llGetColor(0),
+          RPC_GET_COLOR);
+    }
+    else
+    {
+        // Unknown request
+        llRemoteDataReply(channelid, messageid, "unknown request",
+          idata);
+    }
+}
+
+default
+{
+    state_entry()
+    {
+        // ask for an XML-RPC channel
+        llOpenRemoteDataChannel();
+    }
+    
+    remote_data(integer event_type, key channel, key message_id, 
+        string sender, integer idata, string sdata)
+    {
+        if (event_type == REMOTE_DATA_CHANNEL)
+        {
+            // Channel is ready, tell the user the channel key so 
+            // the user can tell the RPC client
+            llOwnerSay("XML-RPC channel key is: " + (string)channel);
+        }
+        else if (event_type == REMOTE_DATA_REQUEST)
+        {
+            // Got an RPC request, do it
+            dispatchRPCRequest(channel, message_id, idata, sdata);
+        }
+    }
+}

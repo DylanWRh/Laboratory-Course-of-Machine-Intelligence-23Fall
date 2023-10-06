@@ -1,0 +1,10 @@
+default
+{
+    touch_start(integer n)
+    {
+        // Tell the owner of the script the name of the resident 
+        // that touched this object
+        llInstantMessage(llGetOwner(),
+            "Help, " + llDetectedName(0) + " is touching me!");
+    }    
+}

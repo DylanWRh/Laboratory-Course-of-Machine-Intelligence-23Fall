@@ -1,0 +1,12 @@
+default
+{
+    state_entry()
+    {
+        // Create particles that fall at 9.8 meters per second, using default 
+        // values for particle texture, size and other values
+        llParticleSystem([
+            PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
+            PSYS_SRC_ACCEL, <0.0, 0.0, -9.8>
+            ]);
+    }
+}

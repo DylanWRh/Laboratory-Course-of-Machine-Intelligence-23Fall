@@ -1,0 +1,42 @@
+vector color_default = <1.0, 1.0, 1.0>; // white
+vector color_blue = <0.0, 0.0, 1.0>;
+
+default
+{
+    state_entry()
+    {
+        llOwnerSay("state_entry() for default state");
+        llSetColor(color_default, ALL_SIDES);
+    }
+    
+    touch_start(integer total_number)
+    {
+        state blue;
+    }
+    
+    state_exit()
+    {
+        llOwnerSay("state_exit() for default state");   
+        llSetTimerEvent(5.0);  // cause a timer() event every 5 seconds     
+    }
+}
+
+state blue
+{
+    state_entry()
+    {
+        llOwnerSay("state_entry() for blue state");
+        llSetColor(color_blue, ALL_SIDES);
+    }
+    
+    timer()
+    {
+        llSetTimerEvent(0.0); // turn off timer events
+        state default;            
+    }
+    
+    state_exit()
+    {
+        llOwnerSay("state_exit() for blue state");        
+    }
+}

@@ -1,0 +1,104 @@
+// Get the first link in the first item in an RSS feed and open it in 
+// the user's web browser when the object is touched
+//
+// This script is very naive and not very robust. It expects only
+// one user to be clicking on it at a time.
+
+// URL for the RSS feed
+string sourceURL= 
+    "http://rss.sina.com.cn/book/military_rank.xml";
+    
+// The standard HTTP success response code
+integer HTTP_OK = 200;
+
+// Key of the resident that clicked on the object. Saved in the 
+// touch_start event so that it can be used in the http_response event.
+key requestingResident = NULL_KEY;
+
+
+// Parse an HTTP response that should be an RSS feed and return the 
+// first link from the first item, or "" if the link could not be found
+//
+// body is the response from an HTTP request. Since HTTP requests are
+// currently limited to 2048 characters, and since this is unknown data
+// from the outside world, the body may or may not actually contain the 
+// information we want.
+//
+
+string getFirstItemLink(string body)
+{
+    // Find the start of the "items" in the RSS feed
+    string startItems = "<item>";
+    if (llSubStringIndex(body, startItems) == -1) 
+    {
+        return "";
+    }
+    
+    // get the string from the beginning of the first item to the end 
+    // of the body
+    string items = 
+        llGetSubString(body, llSubStringIndex(body, startItems), -1);
+    
+    // find the first link in the items
+    string startLink = "<link>";
+    string endLink = "</link>";
+    integer startIndex = llSubStringIndex(items, startLink);
+    integer endIndex = llSubStringIndex(items, endLink);
+    
+    // make sure startLink and endLink were found, and startLink is 
+    // before end link
+    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex)
+    {
+        string link = 
+            llGetSubString(
+                items, 
+                startIndex +llStringLength(startLink),
+                endIndex - 1);
+        // Got it!
+        return link;   
+    }
+    else
+    {
+        return "";
+    }
+}
+
+default 
+{
+    touch_start(integer total_number)
+    {
+        // Save the requestor
+        requestingResident = llDetectedKey(0);
+        
+        llSay(0, "Fetching: " + sourceURL);
+        // Get the RSS feed
+        llHTTPRequest(sourceURL, [], "");
+    }
+    
+    http_response(key id, integer status, list metadata, string body)
+    {
+        // check if the page was successfully fetched
+        if (status == HTTP_OK)
+        {
+            string link = getFirstItemLink(body);
+            if (link != "")
+            {
+                // Got the link, load it in the user's browser
+                llLoadURL(requestingResident, "", link);
+            }
+            else
+            {
+                // Got a response, but didn't get the link
+                llSay(0, "Could not find link");
+            }
+        }
+        else
+        {
+            llSay(0, "Couldn't fetch page, http status: " +
+              (string)status);
+        }
+        
+        // reset this variable
+        requestingResident = NULL_KEY;
+    }
+}

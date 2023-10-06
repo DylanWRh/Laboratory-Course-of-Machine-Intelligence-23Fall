@@ -1,0 +1,10 @@
+string ownerEmail = "wednesday.grimm@gmail.com";
+
+default
+{
+    touch_start(integer total_number)
+    {
+        llEmail(ownerEmail, "Touched!", "I was touched by " + 
+            llDetectedName(0));    
+    }
+}

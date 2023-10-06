@@ -1,0 +1,24 @@
+// A basic script
+//
+// This is the basic script, with some modifications and comments.
+// The script says something on the public chat channel when it is
+// compiled or reset, and something else whenever it's touched.
+
+integer chat_channel = 0;  // the channel script will speak on
+
+default
+{
+    // called whenever the script is called or reset
+    state_entry()
+    {
+        string my_text = "Hello, \"Mighty\" Scripter";
+        llSay(chat_channel, my_text); 
+    }
+
+    // called when an avatar touches this object
+    touch_start(integer total_number)
+    {
+        string my_text = "Touched.";
+        llSay(chat_channel, my_text);
+    }
+}

@@ -1,0 +1,65 @@
+// Sensor visualizer
+//
+// This script turns the object into a transparent, phantom dimpled 
+// sphere that matches the area being searched by the sensor. 
+
+float senseRange = 3.0; // can be up to 96m for sensor, 
+                        // but should be <= 5m for this visualization
+float senseArc = 0.7853981634 ; // == PI / 4.0, 45 degrees
+float senseRate = 5.0; 
+
+// change the prim so it covers the area searched by the sensor, and is 
+// transparent and phantom
+setupPrim()
+{
+    vector dimple = <0.0, senseArc / PI, 0.0>; 
+    llSetPrimitiveParams([
+        PRIM_TYPE, 
+            PRIM_TYPE_SPHERE,   // type 
+                0,                  // hole shape
+                <0.0, 1.0, 0.0>,    // cut
+                0,                  // hollow
+                ZERO_VECTOR,        // twist
+                dimple,             // dimple
+        PRIM_SIZE,
+            2 * <senseRange, senseRange, senseRange>,
+        PRIM_PHANTOM,
+            TRUE,
+        PRIM_COLOR,
+            ALL_SIDES,
+            <1.0, 1.0, 1.0>,
+            0.5
+    ]);       
+}
+
+default
+{
+    state_entry()
+    {
+        setupPrim();
+        
+        // search for PASSIVE (non-physical, unscripted) objects
+        llSensorRepeat("", NULL_KEY, PASSIVE, senseRange, senseArc,
+          senseRate);
+    }
+    
+    no_sensor()
+    {
+        llOwnerSay("Nothing Sensed");
+    }
+    
+    sensor(integer num_detected)
+    {
+        integer x;
+        llOwnerSay("--------");
+        for (x = 0; x < num_detected; x++)
+        {
+            llOwnerSay(
+                "Sensed object " +
+                llDetectedName(x) +
+                " at " +
+                (string)llDetectedPos(x)
+            ); 
+        }
+    }
+}

@@ -1,0 +1,12 @@
+default
+{
+    state_entry()
+    {
+        integer x = 6;
+        do
+        {
+            llOwnerSay("x is " + (string)x);
+        } while (x < 2);    
+        llOwnerSay("all done");
+    }
+}

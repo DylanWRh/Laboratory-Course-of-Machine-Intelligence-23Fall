@@ -1,0 +1,21 @@
+default
+{
+    state_entry()
+    {
+        // Listen on the public channel for the message "activate!"
+        // from scripts owner
+        llListen(PUBLIC_CHANNEL, "", llGetOwner(), "activate!");
+    }
+    
+    on_rez(integer param)
+    {
+        // Reset this script in case the owner has changed
+        llResetScript();
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        // Got the message from the owner
+        llOwnerSay("activated!");
+    }
+}

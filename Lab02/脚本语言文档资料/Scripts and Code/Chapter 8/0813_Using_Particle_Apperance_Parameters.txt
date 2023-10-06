@@ -1,0 +1,41 @@
+default
+{
+    state_entry()
+    {
+        // Create a fountain of particles that change color, 
+        // fade out, and get bigger.
+        llParticleSystem( [
+            // Create a narrow code of particles that shoot up 
+            // from the emitter
+            PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_ANGLE_CONE,
+            PSYS_SRC_ANGLE_END, PI / 8.0,
+            PSYS_SRC_BURST_SPEED_MIN, 2.0,
+            PSYS_SRC_BURST_SPEED_MAX, 4.0,
+            
+            // Apply a downward acceleration to the particles so 
+            // they come back down again
+            PSYS_SRC_ACCEL, <0.0, 0.0, -2.0>,
+            
+            // Turn on color and size interpolation
+            PSYS_PART_FLAGS,
+                PSYS_PART_INTERP_COLOR_MASK |
+                PSYS_PART_INTERP_SCALE_MASK,
+            
+            // Set the start color to white and the end color to blue
+            PSYS_PART_START_COLOR, <1.0, 1.0, 1.0>,
+            PSYS_PART_END_COLOR, <0.0, 0.0, 1.0>,
+            
+            // Start at full opacity, fade to full transparency
+            PSYS_PART_START_ALPHA, 1.0,
+            PSYS_PART_END_ALPHA, 0.0,
+            
+            // Start out small, grow
+            PSYS_PART_START_SCALE, <0.25, 0.25, 0.0>,
+            PSYS_PART_END_SCALE, <2.0, 2.0, 0.0>,
+            
+            // Use the UUID of one of the Library textures, 
+            // Water Particle-Mist
+            PSYS_SRC_TEXTURE, "dcab6cc4-172f-e30d-b1d0-f558446f20d4Ó    
+            ]);            
+    }
+}

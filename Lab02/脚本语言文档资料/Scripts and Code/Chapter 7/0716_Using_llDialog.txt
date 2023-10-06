@@ -1,0 +1,68 @@
+// Channel script will listen on and llDialog will use
+integer dialogChannel = 1975;
+
+// message to show user
+string dialogMessage = "Select a color for this object";
+
+// color options that will be presented to user
+list colorNames = [
+    "blue",
+    "green",
+    "red",
+    "yellow",
+    "cyan",
+    "purple",
+    "black",
+    "white"
+    ];
+
+// color values. This color values in this list match the order of the 
+// color names in the colorNames list
+list colorValues = [
+    <0, 0, 1>,
+    <0, 1, 0>,
+    <1, 0, 0>,
+    <1, 1, 0>,
+    <0, 1, 1>,
+    <1, 0, 1>,
+    <0, 0, 0>,
+    <1, 1, 1>
+    ];
+    
+  
+default
+{
+    state_entry() 
+    {
+        // listen for any message from owner on dialogChannel
+        llListen(dialogChannel, "", llGetOwner(), "");
+    }
+    
+    on_rez(integer p)
+    {
+        // reset, incase owner has changed
+        llResetScript();
+    }
+    
+    touch_start(integer num_detected)
+    {
+        // if the owner is touching object, show dialog
+        if (llDetectedKey(0) == llGetOwner())
+        {
+            llDialog(llGetOwner(), dialogMessage, colorNames, 
+                 dialogChannel);
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        // try to find the message in the list of color names
+        integer colorIndex = llListFindList(colorNames, [message]);
+        if (colorIndex != -1) // color name was found in the list
+        {
+            // get the color value that corresponds to the name
+            vector newColor = llList2Vector(colorValues, colorIndex);
+            llSetColor(newColor, ALL_SIDES);
+        }
+    }
+}
