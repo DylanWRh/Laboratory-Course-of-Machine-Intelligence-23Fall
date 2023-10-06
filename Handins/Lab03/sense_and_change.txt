@@ -1,0 +1,71 @@
+integer OPEN_CHANNEL = 0;
+string HAPPY_TEXTURE = "7641e2ea-8965-4b54-aab4-1504b79e93ec";
+string DEFAULT_TEXTURE = "63af9d72-0726-4739-a8f8-f8daff5275c8";
+string ANGRY_TEXTURE = "f9421091-8bbb-4e56-87f8-a56cc810a16b";
+string OFF_TEXTURE = "c26975ee-30ef-4dbf-8606-3c2abd8f5891";
+
+default 
+{
+    state_entry() 
+    {
+        llSetTexture(DEFAULT_TEXTURE, 3);
+        llSay(OPEN_CHANNEL, "Hello world!");
+        llSensorRepeat("", NULL_KEY, AGENT, 3, PI, 1);
+    }
+
+    sensor(integer num_detected) 
+    {
+        llSay(OPEN_CHANNEL, "I'm glad someone get close to me!");
+        state happy;
+    }
+}
+
+state happy 
+{
+    state_entry() 
+    {
+        llSetTexture(HAPPY_TEXTURE, 3);
+        llSay(OPEN_CHANNEL, "I'm happy!");
+    }
+
+    collision(integer num_detected)
+    {
+        llShout(OPEN_CHANNEL, "Ouch! Get far from me!");
+        state angry;
+    }
+
+    touch_start(integer total_number)
+    {
+        llWhisper(0, "I'm tuned off");
+        state off;
+    }
+}
+
+state angry 
+{
+    state_entry() 
+    {
+        llSetTexture(ANGRY_TEXTURE, 3);
+        llSetTexture("screen_angry", 3);
+        llSetTimerEvent(10.0);
+    }
+
+    timer()
+    {
+        llSay(0, "OK, I'm out of charge and not angry any more.");
+        state off;
+    }
+}
+
+state off
+{
+    state_entry()
+    {
+        llSetTexture(OFF_TEXTURE, 3);
+    }
+
+    touch_start(integer total_number)
+    {
+        state default;
+    }
+}

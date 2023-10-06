@@ -1,0 +1,87 @@
+list sensedObjects = [];
+list posSensedObjects = [];
+integer OPEN_CHANNEL = 0;
+string target = "AgentB";
+vector tar_pos = <0, 0, 0>;
+
+default 
+{
+    state_entry() 
+    {
+        llSetStatus(STATUS_PHYSICS, TRUE);
+        llSay(OPEN_CHANNEL, "Hello, I am the Agent");
+        state Sensing;
+    }
+}
+
+state Sensing
+{
+    state_entry() 
+    {
+        llSensor("", NULL_KEY, SCRIPTED, 7, PI);
+    }
+
+    sensor(integer num_detected)
+    {
+        integer i;
+        for (i=0; i<num_detected; i++)
+        {
+            string name = llDetectedName(i);
+            if (name != "AgentB" && name != "AgentA")
+            {
+                continue;
+            }
+            vector pos = llDetectedPos(i);
+            sensedObjects += name;
+            posSensedObjects += pos;
+        }
+        state Reasoning;
+    }
+}
+
+state Reasoning
+{
+    state_entry() 
+    {
+        integer i;
+        vector cur_pos = llGetPos();
+        tar_pos = cur_pos;
+        integer len = llGetListLength(sensedObjects);
+        if (len == 0)
+        {
+            state Sensing;
+        }
+        for (i=0; i<llGetListLength(sensedObjects); i++)
+        {
+            vector rel_pos = llList2Vector(posSensedObjects, i) - cur_pos;
+            float scaling = 1 + rel_pos.x * rel_pos.x + rel_pos.y * rel_pos.y + rel_pos.z * rel_pos.z;
+            if (llList2String(sensedObjects, i) != target)
+            {
+                scaling = -scaling;
+            }
+            tar_pos += rel_pos * 3 / scaling;
+        }
+        state Action;
+    }
+
+    state_exit()
+    {
+        sensedObjects = [];
+        posSensedObjects = [];
+    }
+}
+
+state Action
+{
+    state_entry() 
+    {
+        llMoveToTarget(tar_pos, 0.4);
+        llSetTimerEvent(0.4);
+    }
+
+    timer()
+    {
+        llStopMoveToTarget();
+        state Sensing;
+    }
+}
