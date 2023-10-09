@@ -1,0 +1,4 @@
+1. 将texture上传到Second Life中
+2. 将代码开头定义的字符串修改为上传后对应texture的UUID
+3. 创造一个正方体Object
+4. 添加sense_and_change.txt中的脚本到物体内容中
