@@ -1,0 +1,4 @@
+1. 新建一个球形Object，重命名为AgentA
+2. 新建一个球形Object，修改纹理使其与AgentA区别，重命名为AgentB
+3. 将simple_reflex_agenta.txt中的脚本内容添加到AgentA中；simple_reflex_agentb中的脚本内容添加到AgentB中
+4. 复制若干AgentA和AgentB，运行脚本即可看到同类相互靠近，异类相互远离
