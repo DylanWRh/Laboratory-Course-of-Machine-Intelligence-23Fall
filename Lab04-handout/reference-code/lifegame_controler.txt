@@ -1,0 +1,312 @@
+
+//***************************************************************
+
+integer blockChatIn = -112239;
+integer blockChatOut = -112238;
+
+integer buttonChat = -292911;
+list buttonChatmenu = [ "RESET", "GO", "BLOCK" ]; 
+
+list blockKeyList = [];
+
+integer gridState = -1;
+//-1=start
+//0=thinkwait
+//1=actwait
+
+float updateCheckInterval = 1.0; //seconds
+
+float halfBlockSize = 0.25; //metres
+float blockAltitudeOffController = 1.0; //metres
+
+rotation z = ZERO_ROTATION; 
+string s = "switch"; 
+
+integer switchLife = 1;
+
+integer thinkWaitProceed()
+{
+ 
+    integer i;
+    
+    for(i = 0; i < llGetListLength(blockKeyList); i++)
+    {
+    
+        if( llGetSubString(llKey2Name(llList2Key(blockKeyList, i)), 2, 3) != "wt")
+        {
+         
+            return FALSE;   
+        }
+    }   
+    
+    return TRUE;
+}
+
+integer actWaitProceed()
+{
+ 
+    integer i;
+    
+    for(i = 0; i < llGetListLength(blockKeyList); i++)
+    {
+    
+        if( llGetSubString(llKey2Name(llList2Key(blockKeyList, i)), 2, 3) != "wa")
+        {
+         
+            return FALSE;   
+        }
+    }   
+    
+    return TRUE;
+}
+
+createBlock()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on four central blocks
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+    
+    llRezObject(s, boardCentre + <halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+}
+
+
+
+default
+{
+ 
+    state_entry()
+    {
+        
+        llOwnerSay("created");
+        llSetObjectName("start");
+        llDialog( llDetectedKey( 0 ), "What do you want to do?", buttonChatmenu, 
+                 buttonChat );
+        state register;       
+    }   
+}
+
+
+state register
+{
+    state_entry()
+    {
+        
+        llOwnerSay("register");
+        
+        
+        
+        llListen(buttonChat, "", NULL_KEY, "");
+        llListen(blockChatOut, "", NULL_KEY, "");
+        
+        //say hello to new blocks to get them to register
+        llSay(blockChatIn, "hello");
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        if(channel == blockChatOut)
+        {
+         
+            if(message == "reg")
+            {
+             
+                llOwnerSay("registered:" + (string)id);
+                blockKeyList += [id];
+                llOwnerSay("freemem=" + (string)llGetFreeMemory( ));
+            }
+        }
+        
+        if(channel == buttonChat)
+        {
+            
+        
+           
+            //Reset
+            if(message == "RESET")
+            {
+                             
+                //tell blocks to go to setup                             
+                llSay(blockChatIn, "SETUP");    
+                
+                //tell them again a second later in case any didn't hear
+                llSleep(1.0);
+                llSay(blockChatIn, "SETUP");
+                
+                state setup;
+            }            
+
+            //Go
+            if(message == "GO")
+            {
+             
+                llSay(blockChatIn, "GO");   
+                
+                state go;
+            }
+        }
+    }
+}
+
+state setup
+{
+ 
+    state_entry()
+    {
+        
+        llOwnerSay("setup");
+        
+        llSetObjectName("setup");
+        
+        gridState = -1;
+        
+        llListen(buttonChat, "", NULL_KEY, "");
+    }
+        
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        
+        
+        if(channel == buttonChat)
+        {
+            
+        
+           
+            //Reset
+            if(message == "RESET")
+            {
+                             
+                //tell blocks to go to setup                             
+                llSay(blockChatIn, "SETUP");    
+                
+                //tell them again a second later in case any didn't hear
+                llSleep(1.0);
+                llSay(blockChatIn, "SETUP");
+            }            
+            
+            //block preset pattern
+            if(message == "BLOCK")
+            {
+             
+                createBlock();
+            }
+                       
+            
+            //Go
+            if(message == "GO")
+            {
+             
+                llSay(blockChatIn, "GO");   
+                
+                state go;
+            }
+        }
+    }
+}
+
+state go
+{
+    state_entry()
+    {
+        llOwnerSay("go");
+        
+        llListen(buttonChat, "", NULL_KEY, "");
+        
+        llSetTimerEvent(updateCheckInterval);
+    }
+    
+    timer()
+    {
+     
+        if(gridState == -1)
+        {
+         
+            //start
+            
+            gridState = 0; //thinkWait
+            
+            llOwnerSay("gridState=" + (string)gridState);
+        }
+        
+        if(gridState == 0)
+        {
+         
+            //thinkWait
+            
+                          
+            //are blocks ready?
+            
+            if(thinkWaitProceed())
+            {
+                
+                llSetObjectName("think");
+                gridState = 1; //actwait   
+            }   
+            
+            llOwnerSay("gridState=" + (string)gridState);
+        }
+        
+        if(gridState == 1)
+        {
+         
+            //actWait
+            
+                          
+            //are blocks ready?
+            
+            if(actWaitProceed())
+            {
+                
+                llSetObjectName("act");
+                gridState = 0; //thinkWait 
+            }   
+            
+            llOwnerSay("gridState=" + (string)gridState);
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        
+        
+        if(channel == buttonChat)
+        {
+            
+        
+           
+            //Reset
+            if(message == "RESET")
+            {
+                             
+                //tell blocks to go to setup                             
+                llSay(blockChatIn, "SETUP");    
+                
+                //tell them again a second later in case any didn't hear
+                llSleep(1.0);
+                llSay(blockChatIn, "SETUP");
+                
+                state setup;
+            }            
+
+            //Go
+            if(message == "GO")
+            {
+             
+                llSay(blockChatIn, "GO");   
+                
+                state go;
+            }
+        }
+    }
+}

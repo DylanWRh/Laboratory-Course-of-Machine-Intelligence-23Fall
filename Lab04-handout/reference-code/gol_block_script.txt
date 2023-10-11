@@ -1,0 +1,503 @@
+//***************************************************************
+// Copyright 2008 Centre For Advanced Spatial Analysis, UCL
+//
+// Author: Joel Dearden, University College London
+//
+// Contact: j.dearden@ucl.ac.uk
+//
+// Joel Dearden, 
+// Centre for Advanced Spatial Analysis,
+// University College London,
+// 1-19 Torrington Place,
+// London,
+// WC1E 7HB
+//
+//
+// This file is part of SLGameOfLife.
+//
+//  SLGameOfLife is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  SLGameOfLife is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with SLGameOfLife.  If not, see <http://www.gnu.org/licenses/>.
+//
+//***************************************************************
+
+
+
+integer currentState = 0; //initially off
+//
+//  1 = on
+//  0 = off
+//
+integer nextState = 0;
+//
+//  1 = on
+//  0 = off
+//
+
+
+float sensorRange = 0.8;
+
+integer blockChatIn = -112239;
+integer blockChatOut = -112238;
+
+
+key controllerKey;
+
+
+integer proceedThinkWait()
+{
+    
+    if(llKey2Name(controllerKey) != "think")
+    {
+     
+        return FALSE;   
+    }
+    
+    return TRUE;
+}
+
+integer proceedActWait()
+{
+    
+    if(llKey2Name(controllerKey) != "act")
+    {
+     
+        return FALSE;   
+    }
+    
+    return TRUE;
+}
+
+default
+{
+ 
+    state_entry()
+    {
+        
+        
+        llSetText("", <0,0,0>, 1.0);
+        
+        //llOwnerSay("default state");    
+        
+        //initially off
+        currentState = 0;
+        llSetObjectName("0:created");
+        llSetAlpha(0.1, ALL_SIDES);
+        
+        llSetColor(<0.0,0.0,0.0>, ALL_SIDES);
+    
+        llListen(blockChatIn, "", NULL_KEY, "");
+        
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        if(channel == blockChatIn)
+        {
+            
+            if(message == "hello")
+            {
+                
+                controllerKey = id;
+                
+                //register
+                llSay(blockChatOut, "reg");
+            
+                state wait;        
+            }
+        }
+    }   
+}
+
+state wait
+{
+
+    state_entry()
+    {
+    
+        llOwnerSay("wait");        
+        
+        llListen(blockChatIn, "", NULL_KEY, "");
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    { 
+    
+        //Listen for gridsection messages...
+    
+        if(channel == blockChatIn)
+        {
+                                    
+            if(message == "SETUP")
+            {
+                
+                state setup;
+            }            
+        }
+    }
+}
+
+state setup
+{
+    state_entry()
+    {
+    
+        
+    
+        llOwnerSay("setup");        
+        
+        llSetText("", <0,0,0>, 1.0);
+        
+        //Switch off
+        currentState = 0;  
+        llSetObjectName("0:setup");
+        llSetAlpha(0.1, ALL_SIDES);
+        llSetColor(<0.0,0.0,1.0>, ALL_SIDES);
+        
+        llListen(blockChatIn, "", NULL_KEY, "");
+        
+        llVolumeDetect(TRUE);
+    }
+    
+    touch_start(integer num_detected)
+    {
+        
+
+        
+        //On touch: toggle on/off
+        if(currentState == 0)
+        {
+            
+            
+            llSetObjectName("1:setup");
+            llSetAlpha(1.0, ALL_SIDES);
+            currentState = 1;
+            
+            //llOwnerSay("changing to currentState = " + (string)currentState);
+        }   
+        else
+        {
+            
+            llSetObjectName("0:setup");
+            llSetAlpha(0.1, ALL_SIDES);
+            currentState = 0;
+            
+            //llOwnerSay("changing to currentState = " + (string)currentState);
+        }
+    }
+    
+    
+    collision_start(integer num_detected)
+    {
+    
+        //if a switch object is rezed inside this object then switch on
+            
+        if(num_detected == 1)
+        {
+         
+            if(llDetectedName(0) == "switch")
+            {
+            
+                llSetObjectName("1:setup");
+                llSetAlpha(1.0, ALL_SIDES);
+                currentState = 1;
+            }   
+        }
+    }    
+    
+    listen(integer channel, string name, key id, string message)
+    { 
+    
+        //Listen for gridsection messages...
+    
+        if(channel == blockChatIn)
+        {
+            
+            if(message == "GO")
+            {
+                llVolumeDetect(FALSE);
+                state go;
+            }
+                        
+            if(message == "SETUP")
+            {
+                llVolumeDetect(FALSE);
+                state reset;
+            }
+        }
+    }
+}
+
+state reset
+{
+ 
+    state_entry()
+    {
+     
+        llOwnerSay("reset");   
+     
+        state setup;   
+    }
+}
+
+state go
+{
+    state_entry()
+    {
+        
+        llOwnerSay("go");   
+        
+        state think_sync;           
+    }
+}
+
+state think_sync
+{
+ 
+    state_entry()
+    {
+        
+        llSetObjectName((string)currentState + ":wt");
+        llOwnerSay("thinksync");   
+        llListen(blockChatIn, "", NULL_KEY, "");
+        llSetTimerEvent(0.1);
+    }   
+             
+    timer()
+    {
+        
+        if(proceedThinkWait())
+        {
+        
+            state think;    
+        }     
+    }
+    
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        if(channel == blockChatIn)
+        {
+         
+            if(message == "SETUP")
+            {
+            
+                state reset;    
+            }   
+        }
+    }
+}
+
+
+state think
+{
+    state_entry()
+    {
+        llOwnerSay("think");  
+        
+        llSetColor(<1.0,0.5,0.0>, ALL_SIDES);
+        
+
+        llListen(blockChatIn, "", NULL_KEY, "");
+        llSensor("", NULL_KEY, SCRIPTED | PASSIVE, sensorRange, PI);
+    }
+
+    
+    sensor(integer num_detected)
+    {
+        
+        //llOwnerSay("num_detected=" + (string)num_detected);
+        
+        //work how many live ones
+        integer liveNeighbours = 0;
+        integer i;
+        
+        for(i = 0; i < num_detected; i++)
+        {
+         
+            if(llGetSubString(llDetectedName(i), 0, 0) == "1")
+            {
+                liveNeighbours++;   
+            }   
+        }
+        
+        llSetText((string)liveNeighbours, <0,0,1>, 1.0);
+        
+            
+        //Work out move and save it
+        
+        //more than one live neighbour
+        
+        if(currentState == 0)
+        {
+         
+            //this block is currently dead
+            
+            
+            
+            if(liveNeighbours == 3)
+            {
+                
+                //4. Any dead cell with exactly three live neighbours comes to life.
+                
+                //llOwnerSay("3 neighbours: dead coming to life");
+             
+                nextState = 1;   
+            }
+            else
+            {
+                
+                //llOwnerSay("dead staying dead");
+             
+                nextState = 0;   
+            }
+        }
+        else
+        {
+         
+            //this block is currently alive   
+
+            
+            if(liveNeighbours < 2)
+            {
+                //1. Any live cell with fewer than two live neighbours dies, as if by loneliness.
+                nextState = 0;   
+                
+                //llOwnerSay("live dying because < 2 neighbours");
+            }
+            else
+            {
+                
+                if(liveNeighbours > 3)
+                {
+                    
+                    //2. Any live cell with more than three live neighbours dies, as if by overcrowding.
+                    nextState = 0;
+                    
+                    //llOwnerSay("live dying because > 3 neighbours");
+                }
+                else
+                {
+                 
+                    //3. Any live cell with two or three live neighbours lives, unchanged, to the next generation.
+                    nextState = 1;
+                    
+                    //llOwnerSay("live staying alive because 2or3 neighbours");
+                }
+            }
+            
+        
+            
+        }
+        
+        state act_sync;
+    }    
+    
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        if(channel == blockChatIn)
+        {
+         
+            if(message == "SETUP")
+            {
+            
+                state reset;    
+            }   
+        }
+    }
+}
+
+state act_sync
+{
+ 
+    state_entry()
+    {
+        
+        llOwnerSay("actsync");  
+        
+        llSetObjectName((string)currentState + ":wa");
+        
+        llListen(blockChatIn, "", NULL_KEY, "");
+        
+        llSetTimerEvent(0.1);
+    }   
+             
+    timer()
+    {
+        
+        if(proceedActWait())
+        {
+        
+            state act;    
+        }     
+    }
+    
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        if(channel == blockChatIn)
+        {
+         
+            if(message == "SETUP")
+            {
+            
+                state reset;    
+            }   
+        }
+    }
+}
+
+
+state act
+{
+
+    state_entry()
+    {
+        
+        llOwnerSay("act");  
+        
+        llSetColor(<0.0,1.0,0.0>, ALL_SIDES);
+        
+        
+    
+        //Read saved move and change to relevant state
+        if(nextState == 0)
+        {
+        
+            //die 
+            
+            currentState = 0;
+            llSetObjectName("0:wt");
+            llSetAlpha(0.1, ALL_SIDES);
+        }
+        else
+        {
+            //live
+            
+            currentState = 1;
+            llSetObjectName("1:wt");
+            llSetAlpha(1.0, ALL_SIDES);
+        } 
+        
+        //Send link confirmation to controller
+        llSay(blockChatOut, "CONFIRM");
+        
+        llSetText("", <0,0,0>, 1.0);
+        
+        state go;
+    }
+}

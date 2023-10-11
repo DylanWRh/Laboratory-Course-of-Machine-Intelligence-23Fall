@@ -1,0 +1,518 @@
+//***************************************************************
+// Copyright 2008 Centre For Advanced Spatial Analysis, UCL
+//
+// Author: Joel Dearden, University College London
+//
+// Contact: j.dearden@ucl.ac.uk
+//
+// Joel Dearden, 
+// Centre for Advanced Spatial Analysis,
+// University College London,
+// 1-19 Torrington Place,
+// London,
+// WC1E 7HB
+//
+//
+// This file is part of SLGameOfLife.
+//
+//  SLGameOfLife is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  SLGameOfLife is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with SLGameOfLife.  If not, see <http://www.gnu.org/licenses/>.
+//
+//***************************************************************
+
+integer blockChatIn = -112239;
+integer blockChatOut = -112238;
+
+integer buttonChat = -292911;
+
+list blockKeyList = [];
+
+integer gridState = -1;
+//-1=start
+//0=thinkwait
+//1=actwait
+
+float updateCheckInterval = 1.0; //seconds
+
+float halfBlockSize = 0.25; //metres
+float blockAltitudeOffController = 1.0; //metres
+
+rotation z = ZERO_ROTATION; 
+string s = "switch"; 
+
+integer switchLife = 1;
+
+integer thinkWaitProceed()
+{
+ 
+    integer i;
+    
+    for(i = 0; i < llGetListLength(blockKeyList); i++)
+    {
+    
+        if( llGetSubString(llKey2Name(llList2Key(blockKeyList, i)), 2, 3) != "wt")
+        {
+         
+            return FALSE;   
+        }
+    }   
+    
+    return TRUE;
+}
+
+integer actWaitProceed()
+{
+ 
+    integer i;
+    
+    for(i = 0; i < llGetListLength(blockKeyList); i++)
+    {
+    
+        if( llGetSubString(llKey2Name(llList2Key(blockKeyList, i)), 2, 3) != "wa")
+        {
+         
+            return FALSE;   
+        }
+    }   
+    
+    return TRUE;
+}
+
+createBlock()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on four central blocks
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+    
+    llRezObject(s, boardCentre + <halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+}
+
+createBoat()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on five blocks to get a boat facing top left
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+
+    //front of boat    
+    llRezObject(s, boardCentre + <halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+
+    //back of boat    
+    llRezObject(s, boardCentre + <3 * halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <halfBlockSize, -3 * halfBlockSize, 0>, <0,0,0>, z, switchLife);
+}
+
+createBlinker()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on three blocks to get a blinker going left to right
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+
+    //left
+    llRezObject(s, boardCentre + <-halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    
+    //middle
+    llRezObject(s, boardCentre + <halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    
+    //right
+    llRezObject(s, boardCentre + <3 * halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+}
+
+createToad()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on six blocks to get a toad going left to right
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+
+    //top line
+    llRezObject(s, boardCentre + <-halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <3 * halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    
+    //bottom line
+    llRezObject(s, boardCentre + <-3 * halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <-halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <halfBlockSize, -halfBlockSize, 0>, <0,0,0>, z, switchLife);
+}
+
+
+createGlider()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on five blocks to get a glider that moves from bottom right to top left
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+
+    llRezObject(s, boardCentre + <3 * halfBlockSize, -3 * halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <5 * halfBlockSize, -3 * halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <3 * halfBlockSize, -5 * halfBlockSize, 0>, <0,0,0>, z, switchLife);
+    llRezObject(s, boardCentre + <7 * halfBlockSize, -3 * halfBlockSize, 0>, <0,0,0>, z, switchLife);        
+    llRezObject(s, boardCentre + <5 * halfBlockSize, -7 * halfBlockSize, 0>, <0,0,0>, z, switchLife);        
+}
+
+createLWSS()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on nine blocks to get a lwws that moves top right to top left
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+
+    llRezObject(s, boardCentre + <halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <3 * halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <5 * halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <7 * halfBlockSize, 3 * halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <7 * halfBlockSize, 7 * halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <halfBlockSize, 7 * halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <-halfBlockSize, halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <-halfBlockSize, 3 * halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+    llRezObject(s, boardCentre + <-halfBlockSize, 5 * halfBlockSize, 0>, <0,0,0>, z, switchLife);     
+}
+
+createRandom()
+{
+ 
+    //rez switch objects inside blocks we want to switch on
+ 
+    //llRezObject("switch", pos, vel, rot, param);
+    
+    //switch on random blocks
+    
+    vector boardCentre = llGetPos();
+    boardCentre.z +=  blockAltitudeOffController;
+
+    
+    integer i;
+    integer j;
+    
+    for(i = -9; i < 10; i+=2)
+    {
+     
+        for(j=-9; j < 10; j+=2)
+        {
+     
+            if(llFrand(1.0) > 0.5)
+            {
+                
+                llRezObject(s, boardCentre + <i * halfBlockSize, j * halfBlockSize, 0>, <0,0,0>, z, switchLife);                     
+            }
+        }   
+    }
+}
+
+default
+{
+ 
+    state_entry()
+    {
+        
+        llOwnerSay("created");
+        llSetObjectName("start");
+        state register;       
+    }   
+}
+
+
+state register
+{
+    state_entry()
+    {
+        
+        llOwnerSay("register");
+        
+        
+        
+        llListen(buttonChat, "", NULL_KEY, "");
+        llListen(blockChatOut, "", NULL_KEY, "");
+        
+        //say hello to new blocks to get them to register
+        llSay(blockChatIn, "hello");
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        if(channel == blockChatOut)
+        {
+         
+            if(message == "reg")
+            {
+             
+                llOwnerSay("registered:" + (string)id);
+                blockKeyList += [id];
+                llOwnerSay("freemem=" + (string)llGetFreeMemory( ));
+            }
+        }
+        
+        if(channel == buttonChat)
+        {
+            
+        
+           
+            //Reset
+            if(message == "RESET")
+            {
+                             
+                //tell blocks to go to setup                             
+                llSay(blockChatIn, "SETUP");    
+                
+                //tell them again a second later in case any didn't hear
+                llSleep(1.0);
+                llSay(blockChatIn, "SETUP");
+                
+                state setup;
+            }            
+
+            //Go
+            if(message == "GO")
+            {
+             
+                llSay(blockChatIn, "GO");   
+                
+                state go;
+            }
+        }
+    }
+}
+
+state setup
+{
+ 
+    state_entry()
+    {
+        
+        llOwnerSay("setup");
+        
+        llSetObjectName("setup");
+        
+        gridState = -1;
+        
+        llListen(buttonChat, "", NULL_KEY, "");
+    }
+        
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        
+        
+        if(channel == buttonChat)
+        {
+            
+        
+           
+            //Reset
+            if(message == "RESET")
+            {
+                             
+                //tell blocks to go to setup                             
+                llSay(blockChatIn, "SETUP");    
+                
+                //tell them again a second later in case any didn't hear
+                llSleep(1.0);
+                llSay(blockChatIn, "SETUP");
+            }            
+            
+            //block preset pattern
+            if(message == "BLOCK")
+            {
+             
+                createBlock();
+            }
+            
+            //boat preset pattern
+            if(message == "BOAT")
+            {
+             
+                createBoat();
+            }
+            
+            //blinker preset pattern
+            if(message == "BLINKER")
+            {
+             
+                createBlinker();
+            }
+            
+            //toad preset pattern
+            if(message == "TOAD")
+            {
+             
+                createToad();
+            }
+            
+            //glide preset pattern
+            if(message == "GLIDER")
+            {
+             
+                createGlider();
+            }
+            
+            //lwss preset pattern
+            if(message == "LWSS")
+            {
+             
+                createLWSS();
+            }
+            
+            //lwss preset pattern
+            if(message == "RANDOM")
+            {
+             
+                createRandom();
+            }
+
+            //Go
+            if(message == "GO")
+            {
+             
+                llSay(blockChatIn, "GO");   
+                
+                state go;
+            }
+        }
+    }
+}
+
+state go
+{
+    state_entry()
+    {
+        llOwnerSay("go");
+        
+        llListen(buttonChat, "", NULL_KEY, "");
+        
+        llSetTimerEvent(updateCheckInterval);
+    }
+    
+    timer()
+    {
+     
+        if(gridState == -1)
+        {
+         
+            //start
+            
+            gridState = 0; //thinkWait
+            
+            llOwnerSay("gridState=" + (string)gridState);
+        }
+        
+        if(gridState == 0)
+        {
+         
+            //thinkWait
+            
+                          
+            //are blocks ready?
+            
+            if(thinkWaitProceed())
+            {
+                
+                llSetObjectName("think");
+                gridState = 1; //actwait   
+            }   
+            
+            llOwnerSay("gridState=" + (string)gridState);
+        }
+        
+        if(gridState == 1)
+        {
+         
+            //actWait
+            
+                          
+            //are blocks ready?
+            
+            if(actWaitProceed())
+            {
+                
+                llSetObjectName("act");
+                gridState = 0; //thinkWait 
+            }   
+            
+            llOwnerSay("gridState=" + (string)gridState);
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        
+        
+        
+        if(channel == buttonChat)
+        {
+            
+        
+           
+            //Reset
+            if(message == "RESET")
+            {
+                             
+                //tell blocks to go to setup                             
+                llSay(blockChatIn, "SETUP");    
+                
+                //tell them again a second later in case any didn't hear
+                llSleep(1.0);
+                llSay(blockChatIn, "SETUP");
+                
+                state setup;
+            }            
+
+            //Go
+            if(message == "GO")
+            {
+             
+                llSay(blockChatIn, "GO");   
+                
+                state go;
+            }
+        }
+    }
+}
