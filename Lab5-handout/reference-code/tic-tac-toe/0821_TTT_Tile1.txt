@@ -1,0 +1,78 @@
+// linked message commands
+integer CMD_SHOW_X = 1;
+integer CMD_SHOW_O = 2;
+integer CMD_SHOW_BLANK = 3;
+
+// local rotatons to show faces, these will be initalized later
+rotation SHOW_X_ROT = ZERO_ROTATION;
+rotation SHOW_O_ROT = ZERO_ROTATION;
+rotation SHOW_BLANK_ROT = ZERO_ROTATION;
+
+// textures
+key textureX = "69f794d3-e194-5090-367f-52c192b34059";
+integer faceX = 2;
+key textureO = "1f481f69-22ef-f104-89ec-5dea01be49d8";
+integer faceO = 4;
+key textureBlank = "8c77cf17-c87c-0311-8696-755cc26dc57e";
+
+// calculate the rotations to show the different faces
+initializeRotations()
+{
+    SHOW_X_ROT = llEuler2Rot(<0.0, 0 * DEG_TO_RAD, 0.0>);
+    SHOW_O_ROT = llEuler2Rot(<0.0, 180 * DEG_TO_RAD, 0.0>);
+    SHOW_BLANK_ROT = llEuler2Rot(<0.0, 270 * DEG_TO_RAD, 0.0>);
+}
+
+initializeTextures()
+{
+    llSetColor(<1.0, 1.0, 1.0>, ALL_SIDES);
+    llSetTexture(textureBlank, ALL_SIDES);
+    llSetTexture(textureX, faceX);
+    llSetTexture(textureO, faceO);
+}
+
+showXFace()
+{
+    llSetLocalRot(SHOW_X_ROT);
+}
+
+showOFace()
+{
+    llSetLocalRot(SHOW_O_ROT);
+}
+
+showBlankFace()
+{
+    llSetLocalRot(SHOW_BLANK_ROT);
+}
+
+default
+{
+    state_entry()
+    {
+        initializeRotations();
+        initializeTextures();
+        showBlankFace();
+    }
+    
+    on_rez(integer p)
+    {
+        llResetScript();
+    }
+    
+    link_message(integer sender, integer cmd, string s, key k)
+    {
+        if (cmd == CMD_SHOW_X)
+        {   
+            showXFace();
+        }
+        else if (cmd == CMD_SHOW_O)
+        {
+            showOFace();
+        }
+        else if (cmd == CMD_SHOW_BLANK)
+        {
+            showBlankFace();
+        }
+    }
+}
