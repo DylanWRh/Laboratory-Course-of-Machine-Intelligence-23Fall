@@ -1,0 +1,1 @@
+新建一个正方体Object，命名为controller，添加lifegame_controller的脚本到物体内容中

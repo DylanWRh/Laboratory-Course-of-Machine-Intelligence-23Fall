@@ -1,0 +1,148 @@
+integer cur_state = 0;
+integer nxt_state = 0;
+integer CONTROL_CHANNEL = 528;
+float sensorRange = 1.0;
+
+default
+{
+    state_entry()
+    {
+        nxt_state = 0;
+        state register;
+    }
+}
+
+state register
+{
+    state_entry()
+    {
+        cur_state = 0;
+        llSetObjectName("die");
+        llSetColor(<0.0, 0.0, 0.0>, ALL_SIDES);
+        llListen(CONTROL_CHANNEL, "controller", NULL_KEY, "ready");
+    }
+
+    touch_start(integer num_detected)
+    {
+        if (cur_state == 0)
+        {
+            cur_state = 1;
+            llSetObjectName("live");
+            llSetColor(<0.0, 1.0, 0.0>, ALL_SIDES);
+        }
+        else
+        {
+            cur_state = 0;
+            llSetObjectName("die");
+            llSetColor(<0.0, 0.0, 0.0>, ALL_SIDES);
+        }
+    }
+
+    listen(integer channel, string name, key id, string message)
+    {
+        state ready;
+    }
+}
+
+state ready
+{
+    state_entry()
+    {
+        llListen(CONTROL_CHANNEL, "controller", NULL_KEY, "");
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "think")
+        {
+            state think;
+        }
+        else if (message == "stop")
+        {
+            state register;
+        }
+        
+    }
+}
+
+state think 
+{
+    state_entry()
+    {
+        llSensor("", NULL_KEY, SCRIPTED | PASSIVE, sensorRange, PI);
+        llListen(CONTROL_CHANNEL, "controller", NULL_KEY, "");
+    }
+
+    sensor(integer num_detected)
+    {
+        integer liveNeigh = 0;
+        integer i;
+        for (i = 0; i < num_detected; i++)
+        {
+            if (llDetectedName(i) == "live")
+            {
+                liveNeigh++;
+            }
+        }
+
+        nxt_state = cur_state;
+        if (cur_state == 0)
+        {
+            if (liveNeigh == 3)
+            {
+                // Any dead cell with exactly three live neighbours comes to life.
+                nxt_state = 1;
+            }
+        }
+        else
+        {
+            if (liveNeigh < 2)
+            {
+                // Any live cell with fewer than two live neighbours dies
+                nxt_state = 0;
+            }
+            else if (liveNeigh > 3)
+            {
+                // Any live cell with more than three live neighbours dies
+                nxt_state = 0;
+            }
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "change")
+        {
+            state change;
+        }
+        else if (message == "stop")
+        {
+            state register;
+        }
+    }
+}
+
+state change 
+{
+    state_entry()
+    {
+        llListen(CONTROL_CHANNEL, "controller", NULL_KEY, "stop");
+        cur_state = nxt_state;
+        if (nxt_state == 1)
+        {
+            llSetObjectName("live");
+            llSetColor(<0.0, 1.0, 0.0>, ALL_SIDES);
+        }
+        else
+        {
+            llSetObjectName("die");
+            llSetColor(<0.0, 0.0, 0.0>, ALL_SIDES);
+        }
+        state ready;
+    }
+
+    listen(integer channel, string name, key id, string message)
+    {
+        state register;
+    }
+}

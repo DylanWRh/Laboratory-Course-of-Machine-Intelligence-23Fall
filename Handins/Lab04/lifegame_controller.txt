@@ -1,0 +1,77 @@
+integer CONTROL_CHANNEL = 528;
+float GAP_TIME = 1.0;
+integer next_step = 0;
+
+default
+{
+    state_entry()
+    {
+        next_step = 0;
+        llSetColor(<1.0, 0.0, 0.0>, ALL_SIDES);
+    }
+
+    touch_start(integer num_detected)
+    {
+        llSetColor(<0.0, 0.0, 1.0>, ALL_SIDES);
+        llSay(CONTROL_CHANNEL, "ready");
+        llSay(0, "start");
+        state waiting;
+    }
+}
+
+state control_thinking 
+{
+    state_entry()
+    {
+        llSay(CONTROL_CHANNEL, "think");
+        llSay(0, "think");
+        next_step = 1;
+        state waiting;
+    }
+}
+
+state control_changing
+{
+    state_entry()
+    {
+        llSay(CONTROL_CHANNEL, "change");
+        llSay(0, "change");
+        next_step = 0;
+        state waiting;
+    }
+}
+
+state waiting
+{
+    state_entry()
+    {
+        llSetTimerEvent(GAP_TIME);
+    }
+
+    touch_start(integer num_detected)
+    {
+        state stop;
+    }
+
+    timer()
+    {
+        if (next_step == 0) 
+        {
+            state control_thinking;
+        } 
+        else 
+        {
+            state control_changing;
+        }
+    }
+}
+
+state stop
+{
+    state_entry()
+    {
+        llSay(0, "stopped");
+        llSay(CONTROL_CHANNEL, "stop");
+        state default;
+    }
+}
