@@ -1,0 +1,14 @@
+// 0 SHOW BLANK 
+// 1 SHOW X 
+// 2 SHOW O
+
+integer cmd = 0;
+
+default
+{
+    touch_start(integer num_detected)
+    {
+        cmd = (cmd + 1) % 3;
+        llMessageLinked(LINK_ALL_OTHERS, cmd, "", NULL_KEY);
+    }
+}

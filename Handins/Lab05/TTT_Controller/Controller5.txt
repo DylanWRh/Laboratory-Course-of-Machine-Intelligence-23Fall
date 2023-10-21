@@ -1,0 +1,260 @@
+// 0 SHOW BLANK 
+// 1 SHOW X 
+// 2 SHOW O
+
+integer BLANK = 0;
+integer X = 1;
+integer O = 2;
+integer whoseTurn = 2;
+integer winner = -1;
+integer GET_TILE = 3;
+
+list tileToLink = [
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+];
+
+list board = [
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+];
+
+list fireworkName = ["FireworkD", "FireworkX", "FireworkO"];
+
+setLinkTile(integer link, integer tile)
+{
+    if (tile == 0)
+    {
+        tileToLink = [link] + llList2List(tileToLink, 1, 8);
+    }
+    else if (tile == 8)
+    {
+        tileToLink = llList2List(tileToLink, 0, 7) + [link];
+    }
+    else
+    {
+        tileToLink = 
+            llList2List(tileToLink, 0, tile - 1) + 
+            [link] + 
+            llList2List(tileToLink, tile + 1, 8);
+    }
+}
+
+integer getLinkToTile(integer link)
+{
+    return llListFindList(tileToLink, [link]);
+}
+
+integer getTileToLink(integer tile)
+{
+    return llList2Integer(tileToLink, tile);
+}
+
+integer getBoardAt(integer tile)
+{
+    return llList2Integer(board, tile);
+}
+
+integer tileIsBlank(integer tile)
+{
+    return getBoardAt(tile) == BLANK;
+}
+
+setBoard(integer tile, integer player)
+{
+    if (tile == 0)
+    {
+        board = [player] + llList2List(board, 1, 8);
+    }
+    else if (tile == 8)
+    {
+        board = llList2List(board, 0, 7) + [player];
+    }
+    else
+    {
+        board = 
+            llList2List(board, 0, tile - 1) + 
+            [player] + 
+            llList2List(board, tile + 1, 8);
+    }
+}
+
+announceTurn()
+{
+    if (whoseTurn == X)
+    {
+        llSay(0, "It's X's turn");
+    }
+    else if (whoseTurn == O)
+    {
+        llSay(0, "It's O's turn");
+    }
+}
+
+setLinkTo(integer linkNum, integer player)
+{
+    llMessageLinked(linkNum, player, "", NULL_KEY);
+}
+
+setTileTo(integer tile, integer player)
+{
+    setBoard(tile, player);
+    setLinkTo(getTileToLink(tile), player);
+}
+
+resetGame()
+{
+    setLinkTo(LINK_ALL_OTHERS, BLANK);
+    whoseTurn = X;
+    winner = -1;
+    board = [
+        BLANK, BLANK, BLANK,
+        BLANK, BLANK, BLANK,
+        BLANK, BLANK, BLANK
+    ];
+}
+
+integer detectWinner()
+{
+    // diagonals
+    if (getBoardAt(4) != BLANK)
+    {
+        if (
+            ((getBoardAt(0) == getBoardAt(4)) &&
+             (getBoardAt(8) == getBoardAt(4))) ||
+            ((getBoardAt(2) == getBoardAt(4)) &&
+             (getBoardAt(6) == getBoardAt(4)))
+        )
+        {
+            return getBoardAt(4);
+        }
+    }
+    // rows
+    integer row;
+    for (row = 0; row < 9; row = row + 3)
+    {
+        integer firstC = getBoardAt(row);
+        if (
+            (firstC != BLANK) &&
+            (firstC == getBoardAt(row + 1)) && 
+            (firstC == getBoardAt(row + 2))
+        )
+        {
+            return firstC;
+        }
+    }
+
+    // columns
+    integer col;
+    for (col = 0; col < 3; col++)
+    {
+        integer firstR = getBoardAt(col);
+        if (
+            (firstR != BLANK) && 
+            (firstR == getBoardAt(col + 3)) &&
+            (firstR == getBoardAt(col + 6))
+        )
+        {
+            return firstR;
+        }
+    }
+
+    // draw or not complete
+    integer isFull = llListFindList(board, [BLANK]);
+    if (isFull == -1)
+    {
+        return 0;
+    }
+    return -1;
+}
+
+announceWinner()
+{
+    if (winner == 0)
+    {
+        llSay(0, "Draw");
+    }
+    else if (winner == 1)
+    {
+        llSay(0, "Winner is X");
+    }
+    else if (winner == 2)
+    {
+        llSay(0, "Winner is O");
+    }
+}   
+
+launchFireworks()
+{
+    
+    vector vOffset = <0.0, 0.0, 2.0>;
+    string objectName = llList2String(fireworkName, winner);
+    integer x;
+    for (x = 0; x < 10; x++)
+    {
+        llRezObject(
+            objectName,
+            llGetPos() + vOffset,
+            ZERO_VECTOR,
+            ZERO_ROTATION,
+            1);
+    }
+}
+
+default
+{
+    state_entry()
+    {
+        llMessageLinked(LINK_ALL_OTHERS, GET_TILE, "", NULL_KEY);        
+        resetGame();
+        announceTurn();
+    }
+
+    link_message(integer sender, integer num, string s, key k)
+    {
+        setLinkTile(sender, num);
+    }
+
+    touch_start(integer num_detected)
+    {
+        if (llDetectedLinkNumber(0) == llGetLinkNumber())
+        {
+            // user touched the controller prim, reset the game
+            resetGame();
+        }
+        else
+        {
+            integer tile = getLinkToTile(llDetectedLinkNumber(0));
+            if (tile != -1)
+            {
+                if (tileIsBlank(tile))
+                {
+                    setTileTo(tile, whoseTurn);
+                    whoseTurn = 3 - whoseTurn;
+                    winner = detectWinner();
+                    if (winner >= 0)
+                    {
+                        state gameEnd;
+                    }
+                }
+                announceTurn();
+            }
+        }
+    }
+}
+
+state gameEnd
+{
+    state_entry()
+    {
+        announceWinner();
+        launchFireworks();
+    }
+
+    touch_start(integer num_detected)
+    {
+        state default;
+    }
+}

@@ -1,0 +1,3 @@
+新建三个焰火Prim，将Firework*.txt的脚本分别添加到物品内容中，再将三个焰火物体加到游戏控制器Prim的内容里
+
+FireworkD、FireworkX、FireworkO分别代表平局、X胜利、O胜利时所放的烟火

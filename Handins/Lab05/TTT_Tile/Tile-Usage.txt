@@ -1,0 +1,7 @@
+新建一个九宫格Prim，将Tile*.txt的脚本添加到物品内容中，Tile1.txt对应实验报告中步骤1 ~ 2的功能；Tile2.txt对应于实验报告中步骤3 ~ 5所实现的功能
+
+控制器Prim每次应该只包含其中一个代码，如想对一个添加了Tile1.txt内容的控制器Prim再添加Tile2.txt的内容，则应先将原有的Tile1.txt内容删除
+
+在添加Tile*.txt前，应先上传texture文件夹中的两个纹理，并用新的UUID替换Tile*.txt代码中相应的UUID
+
+对于Tile2.txt，每个物体所对应的myTileNumber变量是不同的，因此需要对每个Prim修改第一行的代码，具体需要修改的值参见实验报告内的步骤3

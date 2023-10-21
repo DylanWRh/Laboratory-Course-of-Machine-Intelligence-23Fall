@@ -1,0 +1,52 @@
+// 0 SHOW BLANK 
+// 1 SHOW X 
+// 2 SHOW O
+
+integer whoseTurn = 2;
+
+announceTurn()
+{
+    if (whoseTurn == 1)
+    {
+        llSay(0, "It's X's turn");
+    }
+    else if (whoseTurn == 2)
+    {
+        llSay(0, "It's O's turn");
+    }
+}
+
+setLinkTo(integer linkNum, integer cmd)
+{
+    llMessageLinked(linkNum, cmd, "", NULL_KEY);
+}
+
+resetGame()
+{
+    setLinkTo(LINK_ALL_OTHERS, 0);
+    whoseTurn = 2;
+    announceTurn();
+}
+
+default
+{
+    state_entry()
+    {
+        resetGame();
+    }
+
+    touch_start(integer num_detected)
+    {
+        if (llDetectedLinkNumber(0) == llGetLinkNumber())
+        {
+            // user touched the controller prim, reset the game
+            resetGame();
+        }
+        else
+        {
+            setLinkTo(llDetectedLinkNumber(0), whoseTurn);
+            whoseTurn = 3 - whoseTurn;
+            announceTurn();
+        }
+    }
+}

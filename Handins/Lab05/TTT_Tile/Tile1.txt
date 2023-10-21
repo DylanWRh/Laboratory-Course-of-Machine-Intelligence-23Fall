@@ -1,0 +1,38 @@
+key textureX = "26f9d313-000d-48df-9cf0-bb78da1999f6";
+key textureO = "bc16d065-b703-476c-abee-7d14179a4309";
+key textureBlank = TEXTURE_BLANK;
+integer on_face = 0;
+list textures;
+
+initializeTextures()
+{
+    textures = [textureBlank, textureX, textureO];
+    llSetColor(<1.0, 1.0, 1.0>, ALL_SIDES);
+    llSetTexture(textureBlank, ALL_SIDES);
+}
+
+setTexture(key k)
+{
+    llSetTexture(k, on_face); 
+}
+
+default
+{
+    state_entry()
+    {
+        initializeTextures();
+    }
+
+    on_rez(integer p)
+    {
+        llResetScript();
+    }
+
+    link_message(integer sender, integer cmd, string s, key k)
+    {
+        if (cmd >= 0 && cmd <= 2)
+        {
+            setTexture(llList2Key(textures, cmd));
+        }
+    }
+}
