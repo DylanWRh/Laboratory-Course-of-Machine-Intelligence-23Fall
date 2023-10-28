@@ -1,0 +1,249 @@
+integer OPEN_CHANNEL = 0;
+list next_rooms;
+integer learning_room;
+// We represent room A as 0, room B as 1, etc.
+integer cur_room;
+list room_pos;
+
+init()
+{
+    next_rooms = [-1, -1, -1, -1, -1, -1];
+    learning_room = -1;
+    cur_room = -1;
+    room_pos = [
+        <10.0, 108.0, 22.0>,
+        <18.0,  92.0, 22.0>,
+        <26.0, 100.0, 22.0>,
+        <18.0, 100.0, 22.0>,
+        <10.0, 100.0, 22.0>,
+        <10.0,  92.0, 22.0>
+    ];
+}
+
+move_slowly(vector cur_pos, vector target_pos)
+{
+    integer i;
+    for(i = 1; i <= 2; i++)
+    {
+        vector ppos = cur_pos * (2.0 - i) / 2.0 + target_pos * i / 2.0;
+        llSetPos(ppos);
+    }
+}
+
+integer room2idx(string room)
+{
+    if (room == "A" || room == "a")
+    {
+        return 0;
+    }
+    else if (room == "B" || room == "b") {
+        return 1;
+    } 
+    else if (room == "C" || room == "c") { 
+        return 2;
+    }
+    else if (room == "D" || room == "d") {
+        return 3;
+    }
+    else if (room == "E" || room == "e") {
+        return 4;
+    }
+    else if (room == "F" || room == "f") {
+        return 5;
+    }
+    return -1;
+}
+
+string idx2room(integer idx)
+{
+    list rooms = ["A", "B", "C", "D", "E", "F"];
+    if (idx >= 0 && idx < 6)
+    {
+        return llList2String(rooms, idx);
+    }
+    else 
+    {
+        return "Illegal room";
+    }
+}
+
+default 
+{
+    state_entry()
+    {
+        init();
+        state ready;
+    }
+}
+
+state ready
+{
+    state_entry()
+    {
+        llSay(OPEN_CHANNEL, "What should I do? learn or start");
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "learn")
+        {
+            state learn;
+        }
+        else if (message == "start")
+        {
+            cur_room = -1;
+            state room;
+        }
+        else 
+        {
+            llSay(OPEN_CHANNEL, "What should I do? learn or start");
+        }
+    }
+}
+
+state room 
+{
+    state_entry()
+    {
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "");
+        llSay(OPEN_CHANNEL, "Which room should I start from?");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        cur_room = room2idx(message);
+        if (cur_room >= 0 && cur_room < 6)
+        {
+            llSetPos(llList2Vector(room_pos, cur_room));
+            llSleep(0.5);
+            state start;
+        }
+        else
+        {
+            llSay(OPEN_CHANNEL, "Which room am I in?");
+        }
+    }
+}
+
+state learn
+{
+    state_entry()
+    {
+        integer unlearned_room = -1;
+        integer i;
+        for (i = 0; i < 6; i++)
+        {
+            if (llList2Integer(next_rooms, i) == -1)
+            {
+                learning_room = i;
+                state learning;
+            }
+        }
+        if (unlearned_room == -1)
+        {
+            llSay(OPEN_CHANNEL, "Learning Done!");
+            state ready;
+        }
+    }
+}
+
+state learning
+{
+    state_entry()
+    {
+        if (llList2Integer(next_rooms, learning_room) == -1)
+        {
+            llSetPos(llList2Vector(room_pos, learning_room));
+            llSleep(0.4);
+            llSay(OPEN_CHANNEL, "At room " + idx2room(learning_room) + ", where to go next?");
+            llListen(OPEN_CHANNEL, "", NULL_KEY, "");
+        }
+        else 
+        {
+            learning_room = llList2Integer(next_rooms, learning_room);
+            state tmp;
+        }
+    }
+    listen(integer channel, string name, key id, string message) 
+    {
+        integer next_room = room2idx(message);
+        if (next_room >= 0 && next_room < 6)
+        {
+            if (learning_room == 0)
+            {
+                next_rooms = [next_room] + llList2List(next_rooms, 1, 5);
+            }
+            else if (learning_room == 5)
+            {
+                next_rooms = llList2List(next_rooms, 0, 4) + [next_room];
+            }
+            else 
+            {
+                next_rooms = llList2List(next_rooms, 0, learning_room-1) + [next_room] + llList2List(next_rooms, learning_room+1, 5);
+            }
+            learning_room = next_room;
+            state tmp;
+        }
+        else 
+        {
+            llSay(OPEN_CHANNEL, "At room " + idx2room(learning_room) + ", where to go next?");
+        }
+    }
+}
+
+state tmp
+{
+    state_entry()
+    {
+        llSay(OPEN_CHANNEL, "Going to " + idx2room(learning_room));
+        if (llList2Integer(next_rooms, learning_room) == -1)
+        {
+            state learning;
+        }
+        else 
+        {
+            state learn;
+        }
+    }
+}
+
+state start
+{
+    state_entry()
+    {
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "stop");
+        integer not_stop = 1;
+        while (not_stop)
+        {
+            llSay(OPEN_CHANNEL, "Current room " + idx2room(cur_room));
+            if (cur_room == 5)
+            {
+                llSay(OPEN_CHANNEL, "Done!");
+                not_stop = 0;
+            }
+            else 
+            {
+                integer next_room = llList2Integer(next_rooms, cur_room);
+                if (next_room == -1) {
+                    llSay(OPEN_CHANNEL, "Not learn this situation!");
+                    not_stop = 0;
+                }
+                else 
+                {
+                    move_slowly(llGetPos(), llList2Vector(room_pos, next_room));
+                    llSleep(0.05);
+                    cur_room = next_room;
+                }
+            }
+            
+        }
+        llSay(OPEN_CHANNEL, "Enter q to quit!");
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "q");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "stop" || message == "q")
+        {
+            state ready;
+        } 
+    }
+}
