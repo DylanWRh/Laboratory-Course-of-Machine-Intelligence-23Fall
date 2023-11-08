@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"><HEAD> 
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> 
+<title>蚁群算法js版</title> 
+<style> 
+.point{ 
+position:absolute; 
+background-color:#000000; 
+overflow:hidden; 
+width:2px; 
+height:2px; 
+} 
+</style> 
+<script type="text/JavaScript"> 
+//============================ 
+//系统参数初始化 
+//---------------------------- 
+//生命体数量与轨迹长度 
+Unit=10;Path=10; 
+//生命体速度上下限 
+v0=2;vM=10; 
+//生命体加速度变化范围 
+Kr=0.1;Kv=0.1*(vM-v0); 
+//生命体运动范围 
+x0=0;xM=document.documentElement.clientWidth; 
+y0=0;yM=document.documentElement.clientHeight; 
+//============================ 
+var r=new Array(); 
+var v=new Array(); 
+var dr=new Array(); 
+var dv=new Array(); 
+var x=new Array(); 
+var y=new Array(); 
+var life=new Array(); 
+
+//单击暂停 
+function document.onclick(){ 
+if(window.status!='playing'){ 
+window.status='playing'; 
+init(0); 
+}else{ 
+window.status=Unit; 
+} 
+} 
+//边界随窗口大小调整 
+function window.onresize(){ 
+xM=document.documentElement.clientWidth; 
+yM=document.documentElement.clientHeight; 
+} 
+//初始化函数 
+function init(i){ 
+if(window.status=='playing'&&i<Unit){ 
+if(!life[i]){ 
+obj=life[i]=document.createElement("div"); 
+obj.className="point"; 
+obj.style.left=x[i]=(x0+xM)/2; 
+obj.style.top=y[i]=(y0+yM)/2; 
+document.body.appendChild(obj); 
+r[i]=Math.random(); 
+v[i]=1/Math.random(); 
+dr[i]=Kr*Math.random(); 
+dv[i]=Kv*Math.random(); 
+} 
+Move(i); 
+setTimeout('init('+(i+1)+')',i); 
+} 
+} 
+//运动函数 
+Total=Unit*Path; 
+Pi=Math.PI; 
+function Move(i){ 
+if(window.status=='playing'){ 
+k=i%Unit; 
+X=x[k]; 
+Y=y[k]; 
+R=r[k]; 
+V=v[k]; 
+if(!life[i]){ 
+obj=life[i]=document.createElement("div"); 
+obj.className="point"; 
+obj.style.left=X; 
+obj.style.top=Y; 
+document.body.appendChild(obj); 
+} 
+obj=life[i]; 
+R+=dr[k]*(2*Math.random()-1); 
+V+=dv[k]*(2*Math.random()-1); 
+v[k]=V=(V<v0)?v0:((V<vM)?V:vM); 
+X+=Math.sin(2*Pi*R)*V; 
+Y+=Math.cos(2*Pi*R)*V; 
+//碰撞边界反弹 
+R=(X<x0||X>xM)?-R:R; 
+R=(Y<y0||Y>yM)?0.5-R:R; 
+r[k]=R>1?R-1:R<0?R+1:R; 
+X=x[k]+=Math.sin(2*Pi*R)*V; 
+Y=y[k]+=Math.cos(2*Pi*R)*V; 
+/*================================*/ 
+//溢出边界重生(类似流星效果) 
+if(X<x0||X>xM||Y<y0||Y>yM){ 
+X=x[k]=(x0+xM)/2; 
+Y=y[k]=(y0+yM)/2; 
+}else{ 
+x[k]=X; 
+y[k]=Y; 
+} 
+/*---------------------------------- 
+/*================================*/ 
+obj.style.left=X; 
+obj.style.top=Y; 
+i+=Unit; 
+i=(i<Total)?i:i-Total; 
+setTimeout('Move('+i+')',Unit); 
+} 
+} 
+//根据浏览器自动加载动画 
+switch(navigator.appName.toLowerCase()){ 
+case "netscape": 
+window.addEventListener("load",document.onclick,false); 
+break; 
+case "microsoft internet explorer": 
+default: 
+window.attachEvent("onload",document.onclick); 
+break; 
+} 
+</script> 
+</head> 
+<body scroll="no"> 
+</body> 
+</html>
