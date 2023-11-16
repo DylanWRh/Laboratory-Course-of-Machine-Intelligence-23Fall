@@ -1,0 +1,29 @@
+float sense_flag_range = 3.0;
+float sense_flag_arc = PI;
+float sense_flag_rate = 1.0;
+
+integer food_number = 5;
+
+vector init_scale = ZERO_VECTOR;
+vector cur_scale = ZERO_VECTOR;
+
+default 
+{
+    state_entry()
+    {
+        init_scale = llGetScale();
+        llSensorRepeat("Flag", NULL_KEY, (PASSIVE|ACTIVE), sense_flag_range, sense_flag_arc, sense_flag_rate);
+    } 
+    sensor(integer total_number)
+    {
+        if (total_number >= food_number)
+        {
+            llDie();
+        }
+        else 
+        {
+            cur_scale = init_scale * (float)(food_number - total_number) / (float)food_number;
+            llSetScale(cur_scale);
+        }
+    }
+}

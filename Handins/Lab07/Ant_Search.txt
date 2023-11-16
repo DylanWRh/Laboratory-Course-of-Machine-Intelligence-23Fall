@@ -1,0 +1,186 @@
+vector home_pos = ZERO_VECTOR;
+vector food_pos = ZERO_VECTOR;
+float min_dist = 1.0;
+vector phe_pos = ZERO_VECTOR;
+vector phe_avg_pos = ZERO_VECTOR;
+
+rotation myrot = ZERO_ROTATION;
+vector mypos = ZERO_VECTOR;
+
+string phe_name = "Phe";
+string flag_name = "Flag";
+
+float sense_food_range = 10.0;
+float sense_food_arc = PI;
+float sense_food_rate = 1.7;
+
+float sense_phe_range = 8.0;
+float sense_phe_arc = PI_BY_TWO; 
+float sense_phe_rate = 1.7;
+
+float random_move_angle = 45.0;
+float step = 1.0;
+float step_time = 1.0;
+
+float sleep_time = 1.0;
+
+random_move()
+{
+    myrot = llGetRot();
+    vector euler = llRot2Euler(myrot);
+    float angle = euler.z * RAD_TO_DEG; 
+    angle += llFrand(random_move_angle * 2.0) - random_move_angle;
+    euler = <0.0, 0.0, angle> * DEG_TO_RAD;
+    myrot = llEuler2Rot(euler);
+    llSetRot(myrot);
+    
+    mypos = llGetPos();
+    angle *= DEG_TO_RAD;
+    mypos.x += step * llCos(angle);
+    mypos.y += step * llSin(angle);
+    llSetPos(mypos);
+}
+
+turn_back()
+{
+    myrot = llGetRot();
+    vector euler = llRot2Euler(myrot);
+    euler.z += PI;
+    myrot = llEuler2Rot(euler);
+    llSetRot(myrot);
+}
+
+default
+{
+    on_rez(integer start_param)
+    {
+        llResetScript();
+    }
+    state_entry()
+    {
+        llSensor("Home", NULL_KEY, (PASSIVE|ACTIVE), 96.0, PI);
+    }
+    sensor(integer total_number)
+    {
+        home_pos = llDetectedPos(0);
+        state search_food;
+    }
+}
+
+state search_food 
+{
+    state_entry()
+    {
+        llSensorRepeat("Food", NULL_KEY, (PASSIVE|ACTIVE), sense_food_range, sense_food_arc, sense_food_rate);
+    }
+    no_sensor()
+    {
+        state search_phe;
+    }
+    sensor(integer total_number)
+    {
+        integer i;
+        food_pos = llDetectedPos(0);
+        mypos = llGetPos();
+        state move_to_food;
+    }
+}
+
+state search_phe 
+{
+    state_entry()
+    {
+        llSensorRepeat("Phe", NULL_KEY, (PASSIVE|ACTIVE), sense_phe_range, sense_phe_arc, sense_phe_rate);
+    }
+    no_sensor()
+    {
+        mypos = llGetPos();
+        random_move();
+        state search_food;
+    }
+    sensor(integer total_number)
+    {
+        integer j;
+        for (j = 0; j < total_number; j++)
+        {
+            phe_pos = llDetectedPos(j);
+            phe_avg_pos.x += phe_pos.x;
+            phe_avg_pos.y += phe_pos.y;
+        }
+        phe_avg_pos /= (float)total_number;
+        mypos = llGetPos();
+        vector offset = phe_avg_pos - mypos;
+        float x = offset.x;
+        float y = offset.y;
+        float z = llSqrt(x * x + y * y);
+        offset = <x/z, y/z, 0.0>;
+        float angle = llAtan2(x, y);
+        myrot = llEuler2Rot(<0.0, 0.0, angle>);
+        llSetRot(myrot);
+        mypos += step * offset;
+        llSetPos(mypos);
+        phe_avg_pos = <0.0, 0.0, 0.0>;
+        state search_food;
+    }
+}
+
+state move_to_food
+{
+    state_entry()
+    {
+        mypos = llGetPos();
+        vector offset = food_pos - mypos;
+        float dist = llSqrt(offset.x * offset.x + offset.y * offset.y);
+        float angle = llAtan2(offset.x, offset.y);
+        myrot = llEuler2Rot(<0.0, 0.0, angle>);
+        llSetRot(myrot);
+
+        while (dist > min_dist)
+        {
+            llSleep(sleep_time);
+            offset = food_pos - mypos;
+            float x = offset.x;
+            float y = offset.y;
+            float z = llSqrt(x * x + y * y);
+            offset = <x/z, y/z, 0.0>;
+            mypos += step * offset;
+            llSetPos(mypos);
+            offset = food_pos - mypos;
+            dist = llSqrt(offset.x * offset.x + offset.y * offset.y);
+        }
+
+        llRezObject(flag_name, food_pos, ZERO_VECTOR, ZERO_ROTATION, 1);
+        state back_home;
+    }
+}
+
+state back_home
+{
+    state_entry()
+    {
+        mypos = llGetPos();
+        vector offset = home_pos - mypos;
+        float dist = llSqrt(offset.x * offset.x + offset.y * offset.y);
+        float angle = llAtan2(offset.x, offset.y);
+        myrot = llEuler2Rot(<0.0, 0.0, angle>);
+        llSetRot(myrot);
+
+        while (dist > min_dist)
+        {
+            llSleep(sleep_time);
+            llRezObject(phe_name, llGetPos(), ZERO_VECTOR, ZERO_ROTATION, 1);
+            offset = home_pos - mypos;
+            float x = offset.x;
+            float y = offset.y;
+            float z = llSqrt(x * x + y * y);
+            offset = <x/z, y/z, 0.0>;
+            mypos += step * offset;
+            llSetPos(mypos);
+            offset = home_pos - mypos;
+            dist = llSqrt(offset.x * offset.x + offset.y * offset.y);
+        }
+
+        turn_back();
+        state search_food;
+    }
+}

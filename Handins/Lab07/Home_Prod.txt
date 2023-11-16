@@ -1,0 +1,24 @@
+string antName = "Ant";
+
+float time = 3.0;
+float range = 3.0;
+integer ant_num_per_touch = 3;
+
+default
+{
+    touch_start(integer total_number)
+    {
+        integer i;
+        for(i = 0; i < ant_num_per_touch; i++)
+        {
+            float ant_angle = llFrand(PI * 2);
+            rotation ant_rot = llEuler2Rot(<0.0, 0.0, ant_angle>);
+            vector ant_offset = <0.0, 0.0, 0.0>;
+            ant_offset.x += llFrand(range) * 2 - range;
+            ant_offset.y += llFrand(range) * 2 - range;
+            ant_offset.z -= 0.6;
+            llRezObject(antName, llGetPos() + ant_offset, ZERO_VECTOR, ant_rot, 0);
+            llSleep(time); 
+        }
+    }
+}

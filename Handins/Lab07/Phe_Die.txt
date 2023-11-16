@@ -1,0 +1,13 @@
+float phe_time = 20.0;
+
+default
+{
+    state_entry()
+    {
+        llSetTimerEvent(phe_time);
+    }
+    timer()
+    {
+        llDie();
+    }
+}
