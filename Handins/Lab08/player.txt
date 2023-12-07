@@ -1,0 +1,136 @@
+integer CONTROL_CHANNEL = 528;
+integer OPEN_CHANNEL = 0;
+
+integer ALWAYS_D = 0;
+integer ALWAYS_C = 1;
+integer TIT_FOR_TAT = 2;
+integer TIT_FOR_TATS = 3;
+integer RANDOM = 4;
+integer strategy = 0;
+list strategies = ["ALWAYS_D", "ALWAYS_C", "TIT_FOR_TAT", "TIT_FOR_TWO_TATS", "RANDOM"];
+integer B_D = 0;
+
+string playerA;
+string playerB;
+
+string C = "C";
+string D = "D";
+
+init()
+{
+    B_D = 0;
+    strategy = ALWAYS_D;
+    playerA = llGetObjectName();
+    if (playerA == "playerA")
+    {
+        playerB = "playerB";
+    }
+    else 
+    {
+        playerB = "playerA";
+    }
+}
+
+make_choice()
+{
+    if (strategy == ALWAYS_D)
+    {
+        llSay(CONTROL_CHANNEL, D);
+    }
+    else if (strategy == ALWAYS_C)
+    {
+        llSay(CONTROL_CHANNEL, C);
+    }
+    else if (strategy == TIT_FOR_TAT)
+    {
+        if (B_D > 0)
+        {
+            llSay(CONTROL_CHANNEL, D);
+        }
+        else 
+        {
+            llSay(CONTROL_CHANNEL, C);
+        }
+    }
+    else if (strategy == TIT_FOR_TATS)
+    {
+        if (B_D > 1)
+        {
+            llSay(CONTROL_CHANNEL, D);
+        }
+        else 
+        {
+            llSay(CONTROL_CHANNEL, C);
+        }
+    }
+    else if (strategy == RANDOM)
+    {
+        float rnd = llFrand(1.0);
+        if (rnd > 0.5)
+        {
+            llSay(CONTROL_CHANNEL, D);
+        }
+        else 
+        {
+            llSay(CONTROL_CHANNEL, C);
+        }
+    }
+}
+
+default 
+{
+    state_entry()
+    {
+        init();
+        llSay(OPEN_CHANNEL, "Init " + playerA);
+        llListen(CONTROL_CHANNEL, "controller", NULL_KEY, "");
+    }
+    touch_start(integer num_detected)
+    {
+        strategy = (strategy + 1) % 5;
+        llSay(OPEN_CHANNEL, playerA + " state is " + llList2String(strategies, strategy));
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "ready")
+        {
+            state ready;
+        }
+    }
+}
+
+state ready
+{
+    state_entry()
+    {
+        llListen(CONTROL_CHANNEL, "controller", NULL_KEY, "");
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (channel == CONTROL_CHANNEL && message == "choose")
+        {
+            make_choice();
+        }
+        else if (channel == CONTROL_CHANNEL && message == playerB + D)
+        {
+            B_D += 1;
+        }
+        else if (channel == CONTROL_CHANNEL && message == playerB + C)
+        {
+            B_D = 0;
+        }
+        else if (message == "end")
+        {
+            state end;
+        }
+    }
+}
+
+state end 
+{
+    state_entry()
+    {
+        state default;
+    }
+}

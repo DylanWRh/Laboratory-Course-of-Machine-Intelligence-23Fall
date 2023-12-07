@@ -1,0 +1,133 @@
+integer CONTROL_CHANNEL = 528;
+integer OPEN_CHANNEL = 0;
+
+integer maxX = 200;
+integer curX = 0;
+
+string C = "C";
+string D = "D";
+
+integer Arec = 0;
+integer Brec = 0;
+integer Ascore = 0;
+integer Bscore = 0;
+string playerA = "playerA";
+string playerB = "playerB";
+string Achoice = "";
+string Bchoice = "";
+
+init()
+{
+    curX = 0;
+    Arec = 0;
+    Brec = 0;
+    Ascore = 0;
+    Bscore = 0;
+    Achoice = "";
+    Bchoice = "";
+}
+
+calc_score()
+{
+    if (Achoice == C && Bchoice == C)
+    {
+        Ascore += 3;
+        Bscore += 3;
+    }
+    else if (Achoice == C && Bchoice == D)
+    {
+        Bscore += 5;
+    }
+    else if (Achoice == D && Bchoice == C)
+    {
+        Ascore += 5;
+    }
+    else if (Achoice == D && Bchoice == D)
+    {
+        Ascore += 1;
+        Bscore += 1;
+    }
+}
+
+default
+{
+    state_entry()
+    {
+        init();
+        llSay(OPEN_CHANNEL, "Init controller");
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "start")
+        {
+            llSay(OPEN_CHANNEL, "Game start, round = " + (string)maxX);
+            llSay(CONTROL_CHANNEL, "ready");
+            state controlling;
+        }
+    }
+}
+
+state controlling
+{
+    state_entry()
+    {
+        if (curX < maxX)
+        {
+            state one_epoch;
+        }
+        else 
+        {
+            state end;
+        }
+    }
+}
+
+state one_epoch
+{
+    state_entry()
+    {
+        llSleep(0.2);
+        curX += 1;
+        Arec = 0;
+        Brec = 0;
+        llListen(CONTROL_CHANNEL, "", NULL_KEY, "");
+        llListen(OPEN_CHANNEL, "", NULL_KEY, "");
+        llSay(CONTROL_CHANNEL, "choose");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (channel == CONTROL_CHANNEL && name == playerA)
+        {
+            Achoice = message;
+            Arec = 1;
+        }
+        else if (channel == CONTROL_CHANNEL && name == playerB)
+        {
+            Bchoice = message;
+            Brec = 1;   
+        }
+        if (channel == OPEN_CHANNEL && message == "end")
+        {
+            state end;
+        }
+        if (Arec + Brec == 2)
+        {
+            calc_score();
+            llSay(OPEN_CHANNEL, "Round " + (string)curX + ", playerA choose " + Achoice + ", playerB choose " + Bchoice);
+            llSay(CONTROL_CHANNEL, playerA + Achoice);
+            llSay(CONTROL_CHANNEL, playerB + Bchoice);
+            state controlling;
+        }
+    }
+}
+
+state end
+{
+    state_entry()
+    {
+        llSay(CONTROL_CHANNEL, "end");
+        llSay(OPEN_CHANNEL ,"Game ends, A score = " + (string)Ascore + ", B score = " + (string)Bscore);
+        state default;
+    }
+}
