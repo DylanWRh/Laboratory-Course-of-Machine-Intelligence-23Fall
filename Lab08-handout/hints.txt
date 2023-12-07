@@ -1,0 +1,22 @@
+创建三个物体：
+
+judge：裁判员，脚本：judge.txt
+
+playerA：参与者A，脚本：playerA.txt
+
+playerB: 参与者B，脚本：playerB.txt
+
+游戏说明：
+
+	对于playerA和playerB，通过触摸他们，可以设定他们的策略，一共五种。
+
+设定完策略后，输入start，开始游戏。每一局30次（这个次数可以在judge的脚本中
+
+改变，由变量maxX设定）。游戏过程中会输出每个player每一次的选择，“C”表示
+
+合作，“D”表示不合作。每一局结束后输出每个player的得分。游戏结束后可以改
+
+变策略和再次输入start继续游戏。
+
+
+
