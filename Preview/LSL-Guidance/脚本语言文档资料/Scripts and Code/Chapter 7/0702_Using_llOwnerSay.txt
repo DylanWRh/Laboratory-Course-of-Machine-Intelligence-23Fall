@@ -1,8 +1,0 @@
-default
-{
-    state_entry()
-    { 
-        // tell the owner this script’s position
-        llOwnerSay("Help, come get me, I'm at " + (string)llGetPos());
-    }
-}

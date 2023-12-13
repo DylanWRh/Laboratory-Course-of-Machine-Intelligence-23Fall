@@ -1,9 +1,0 @@
-default
-{
-    state_entry()
-    {
-        // A boring vehicle that doesn't do anything
-        llSetStatus(STATUS_PHYSICS, TRUE);
-        llSetVehicleType(VEHICLE_TYPE_CAR);
-    }
-}

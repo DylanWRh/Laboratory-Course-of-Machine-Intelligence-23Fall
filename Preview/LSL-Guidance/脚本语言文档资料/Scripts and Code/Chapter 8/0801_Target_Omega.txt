@@ -1,8 +1,0 @@
-default
-{
-    state_entry()
-    {
-        llSetRot(llEuler2Rot(<PI/4.0, PI/4.0, 0.0>));
-        llTargetOmega(<0.0, 0.0, 1.0>, PI, 1.0);
-    }
-}
