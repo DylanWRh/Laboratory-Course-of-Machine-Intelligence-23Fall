@@ -1,0 +1,137 @@
+integer VICCHANNEL = 1927;
+integer OPENCHANNEL = 0;
+
+float range = 10.0;
+float HP = 100.0;
+float step = 2.0;
+
+move()
+{
+    vector mpos = llGetPos();
+    float angle = llFrand(TWO_PI);
+    vector pos = <mpos.x+step*llCos(angle),mpos.y+step*llSin(angle),mpos.z>;
+    llSetPos(pos);
+}
+
+float getRate(string texture)
+{ 
+    if (texture == "W" || texture == "S")
+    {
+        return 1.8;
+    }
+    else if (texture == "R")
+    {
+        return 1.0;
+    }
+    return 0;
+}
+
+default
+{
+    state_entry()
+    {
+        llSay(0, "victim rezed");
+        llSetColor(<1, 1, 0>, ALL_SIDES);
+        llListen(OPENCHANNEL, "", NULL_KEY, "startv");
+    }
+    on_rez(integer start_param)
+    {
+        llResetScript();
+        HP = start_param;
+        llSetObjectName((string)HP);
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        llSetObjectName("victim_"+(string)"HP");
+        state start;
+    }
+}
+
+state start 
+{
+    state_entry()
+    {
+        llSensorRepeat("", NULL_KEY, (ACTIVE|PASSIVE),range, PI, 1.0);
+        llListen(OPENCHANNEL, "", NULL_KEY, "stop");
+        llListen(VICCHANNEL, "" , NULL_KEY, "");
+    }
+    listen(integer channel, string name, key id, string message )
+    {
+        if(channel == OPENCHANNEL && message == "stop")
+        {
+            llResetScript();
+        }
+        else if(channel == VICCHANNEL && message == (string)llGetKey())
+        {
+            if(HP > 0)
+            {
+                llSetObjectName("victim_"+(string)"HP");
+            }
+            llDie();
+        }
+    }
+    no_sensor()
+    {
+        move();
+    }
+    sensor(integer total_number)
+    {
+        integer x = 0;
+        integer flag = 0;
+        string detname;
+        string detlevel;
+        string dettexture;
+        string detfiery;
+        float damage = 0;
+        for (x = 0; x < total_number; x++)
+        {
+            detname = llDetectedName(x);
+            detlevel = llGetSubString(detname,-2,-2);
+            if (detlevel == "F")
+            {
+                detfiery = llGetSubString(detname, -1, -1);
+                dettexture = llGetSubString(detname,0,0);
+                flag = 1;
+                float rate = getRate(dettexture);
+                if (detfiery == "1")
+                {
+                    damage += rate / 10;
+                }
+                else if (detfiery == "2")
+                {
+                    damage += rate / 5;
+                }
+                else if (detfiery == "3")
+                {
+                    damage += rate / 2.5;
+                }
+            }
+            HP = HP - damage;
+            llSetObjectName("victim_"+(string)"HP");
+        }
+        llSay(OPENCHANNEL, "HP: "+(string)(HP));
+        if (flag == 0)
+        {
+            move();
+        }
+        if (HP <= 0)
+        {
+            state die;
+        }
+    }
+}
+
+state die
+{
+    state_entry()
+    {
+        llSetObjectName("Vdied");
+        llSay(OPENCHANNEL, "Victim Died");
+        llSetColor(<0, 0, 0>, ALL_SIDES);
+        llListen(OPENCHANNEL, "", NULL_KEY, "reset");
+    }
+    listen(integer channel, string name, key id, string message )
+    {
+        llResetScript();
+    }
+}

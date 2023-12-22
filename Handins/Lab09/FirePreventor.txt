@@ -1,0 +1,110 @@
+key buildingKey;
+integer OPENCHANNEL = 0;
+
+float min_dis = 3;
+float step = 2.5;
+
+moveTo(vector pos)
+{
+    llSay(OPENCHANNEL, "Moving to Building");
+    vector mpos = llGetPos();
+    integer cnt = 0;
+    while(llVecDist(mpos, pos) > min_dis && cnt < 10)
+    {
+        cnt++;
+        float x = pos.x - mpos.x;
+        float y = pos.y - mpos.y;
+        float z = llSqrt(x*x + y*y);
+        mpos.x += step * x / z;
+        mpos.y += step * y / z;
+        llSetPos(mpos);
+    }
+    llSay(OPENCHANNEL, "Reach Building");
+}
+
+move()
+{
+    vector mpos = llGetPos();
+    float angle = llFrand(TWO_PI);
+    vector pos = <mpos.x+step * llCos(angle), mpos.y + step * llSin(angle), mpos.z>;
+    llSetPos(pos);
+}
+
+default 
+{
+    state_entry()
+    {
+        llListen(OPENCHANNEL, "", NULL_KEY, "start");
+    }
+    on_rez(integer r)
+    {
+        llResetScript();
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        state searching;
+    }
+}
+
+state searching 
+{
+    state_entry()
+    {
+        llSensorRepeat("", NULL_KEY, (ACTIVE|PASSIVE), 20.0, PI, 1.0);
+        llListen(OPENCHANNEL, "", NULL_KEY, "stop");
+    }
+    sensor(integer total_number)
+    {
+        integer x = 0;
+        vector detpos;
+        string detname;
+        string detlevel;
+        for (x = 0; x < total_number; x++)
+        {
+            detname = llDetectedName(x);
+            detlevel = llGetSubString(detname, -2, -2);
+            if (detlevel == "F") 
+            {
+                llSay(0, "Find Fired Building");
+                detpos = llDetectedPos(x);
+                moveTo(detpos);
+                buildingKey = llDetectedKey(x);
+                state fireprevent;
+            }
+        }
+        llSay(OPENCHANNEL, "searching");
+        move();
+    }
+    listen(integer channel, string name, key id, string message )
+    {
+       llResetScript();
+    }
+}
+
+state fireprevent
+{
+    state_entry()
+    {
+        llSay(OPENCHANNEL, "Putting out Fire");
+        llSensorRepeat("", buildingKey, (ACTIVE|PASSIVE), 10.0, PI, 1.0);
+        llListen(OPENCHANNEL, "", NULL_KEY, "stop");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (channel == OPENCHANNEL)
+        {
+            llResetScript();
+        }
+    }
+    sensor(integer total_number)
+    {
+        string detname; 
+        string detlevel;
+        detname = llDetectedName(0);
+        detlevel = llGetSubString(detname,-2,-2);
+        if (detlevel == "N")
+        {
+            state searching;
+        }
+    }
+}
